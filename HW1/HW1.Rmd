@@ -11,6 +11,9 @@ knitr::opts_chunk$set(
 	message = FALSE,
 	warning = FALSE
 )
+
+library(tidyverse)
+library(gridExtra)
 ```
 
 # 1
@@ -36,3 +39,77 @@ This analysis is far from perfect, but it gives a good idea of the relationships
  
  
 # 3
+I used the logistic growth equation to model electric vehicle shares. The equation is given as
+\[f(t) = \frac{e^{a+bt}}{1+e^{a+bt}}\]
+where $f(t)$ is the fraction of electric vehicles, $t$ is the year, and $a$ and $b$ are coefficients.
+
+Data from 2011\textendash 2019 were obtained from [https://afdc.energy.gov/data/] and [https://www.epa.gov/automotive-trends/explore-automotive-trends-data#SummaryData]. The adfc data include total EV sales by year, and the epa data include information on all car production. I am only considering fully-electric vehicles as EVs for this analysis (not plug-in hybrid EVs).
+
+```{r}
+cars <- read_csv("HW1/data/table_export.csv") %>% 
+	mutate(`Model Year` = as.integer(`Model Year`),
+				 `Production (000)` = as.integer(`Production (000)`)) %>% 
+	filter(`Regulatory Class` == "Car",
+				 `Vehicle Type` == "All Car",
+				 Manufacturer == "All",
+				 `Model Year` %in% 2011:2019) %>% 
+	mutate(`Model Year` = as.character(`Model Year`))
+
+evs <- read_csv("HW1/data/10567_pev_sales_2-28-20.csv") %>% 
+	filter(Type == "EV") %>% 
+	select(-Vehicle, -Type) %>% 
+	colSums() %>% 
+	{tibble(Year = names(.),
+					EVs = .)} 
+```
+
+Plotting the sale of EVs and total vehicles gives:
+
+```{r}
+ev_plot <- evs %>% 
+	ggplot(aes(x = Year, y = EVs/1000)) +
+	geom_point() +
+	ylab("EV Sales (x1000)")
+
+cars_plot <- cars  %>% 
+	ggplot(aes(x = `Model Year`, y = `Production (000)`)) +
+	geom_point() +
+	ylim(c(0, NA)) +
+	labs(x = "Year",
+			 y = "Car Sales (x1000)")
+
+grid.arrange(ev_plot, cars_plot, ncol = 1)
+```
+
+And the share of EVs:
+
+```{r}
+evshare <- cars %>% 
+	transmute(Year = `Model Year`,
+						Cars = `Production (000)` * 1000) %>% 
+	left_join(evs, by = "Year") %>% 
+	mutate(ev_share = EVs / Cars)
+
+evshare %>% 
+	ggplot(aes(x = Year, y = ev_share)) +
+	geom_point() +
+	ylab("Share of EVs Sold vs. All Cars")
+```
+
+Finding a logistic growth model:
+
+```{r}
+data <- tibble(year = as.numeric(evshare$Year),
+							 share = as.numeric(evshare$ev_share))
+
+formula <- share~(exp(a+b*year)/(1+exp(a+b*year)))
+formula <- share~(exp(a)/(1+exp(a)))
+formula <- share~SSlogis(year, 1, median(year), 1)
+# model <- 
+	nls(formula,
+			# start = list(a = 1, b = 0.1),
+			data = data,
+			trace = TRUE)
+```
+
+
