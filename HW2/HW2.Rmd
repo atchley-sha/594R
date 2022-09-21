@@ -2,7 +2,9 @@
 title: "HW 2: Energy Demand and CO2 Emissions"
 author: "Hayden Atchley"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  pdf_document:
+    latex_engine: lualatex
 mainfont: Gentium Book Basic
 ---
 
@@ -15,5 +17,81 @@ knitr::opts_chunk$set(
 
 library(tidyverse)
 library(gridExtra)
+library(kableExtra)
 ```
+
+# 1
+
+```{r}
+vm1 <- read_csv("HW2/data/vm1.csv", n_max = 28) %>% 
+	mutate(ITEM = ifelse(is.na(ITEM), lag(ITEM), ITEM))
+
+
+co2gal <- c(gasoline = 8887, diesel = 10180)
+```
+
+Creating a new category combining all buses, single-unit trucks, and combination trucks gives the following:
+
+```{r}
+hdv1 <- vm1 %>% 
+	mutate("ALL HDV" = BUSES + `SINGLE-UNIT TRUCKS/3` + `COMBINATION TRUCKS`)
+
+vmlong <- hdv1 %>% 
+	pivot_longer(c(-YEAR, -ITEM), names_to = "category") %>% 
+	arrange(category, ITEM)
+```
+
+## 1.1
+The average fuel economy is
+
+```{r}
+hdvfe <- hdv1 %>% 
+	filter(ITEM == "Average miles traveled per  gallon of fuel consumed") %>% 
+	select(YEAR, `ALL HDV`) %>% 
+	transmute(Year = YEAR, "Fuel economy (mpg)" = `ALL HDV`)
+
+hdvfe %>% 
+	kbl(booktabs = TRUE, caption = "Average Fuel Economy of HDVs") %>% 
+	kable_styling(latex_options = "HOLD_position")
+```
+
+## 1.2
+The CO~2~ emissions per mile is given by $\frac{1}{miles/gal} \times \frac{CO_2}{gal} = \frac{CO_2}{mile}$. This gives
+
+```{r}
+hdvem <- hdvfe %>% 
+	mutate("Fuel consumption (gpm)" = 1/`Fuel economy (mpg)`,
+				 "Emissions (g CO$_2$/gal)" = co2gal["diesel"],
+				 "Emissions (g CO$_2$/mile)" =
+				 	`Fuel consumption (gpm)` * `Emissions (g CO$_2$/gal)`)
+
+hdvem %>% 
+	kbl(booktabs = TRUE, escape = FALSE, caption = "HDV Fuel Consumption") %>% 
+	kable_styling(latex_options = "HOLD_position")
+```
+
+## 1.3
+The total CO~2~ emissions for all LDVs and HDVs is
+
+```{r}
+allem <- vmlong %>% 
+	filter(category %in% c("ALL LIGHT DUTY VEHICLES/2", "ALL HDV"),
+				 ITEM %in% c("Fuel consumed   (thousand gallons)")) %>% 
+	pivot_wider(names_from = ITEM) %>% 
+	mutate("Emissions (g CO$_2$/gal)" = c(rep(co2gal[2], 2),
+																				rep(co2gal[1], 2)),
+				 category = ifelse(str_detect(category, "LIGHT"),
+				 									"ALL LDV", category)) %>% 
+	arrange(desc(category), desc(YEAR)) %>% 
+	mutate("Emissions (g CO$_2$)" = 
+				 	`Fuel consumed   (thousand gallons)` *
+				 	`Emissions (g CO$_2$/gal)` * 1000,
+				 "Emissions (M tons CO$_2$)" = `Emissions (g CO$_2$/gal)` / 1000000)
+
+allem %>% 
+	kbl(booktabs = TRUE, escape = FALSE,
+			caption = "Emissions of LDVs and HDVs") %>% 
+	kable_styling(latex_options = c("HOLD_position", "scale_down"))
+```
+
 
