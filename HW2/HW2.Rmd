@@ -1,0 +1,19 @@
+---
+title: "HW 2: Energy Demand and CO2 Emissions"
+author: "Hayden Atchley"
+date: "`r Sys.Date()`"
+output: pdf_document
+mainfont: Gentium Book Basic
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+
+library(tidyverse)
+library(gridExtra)
+```
+
