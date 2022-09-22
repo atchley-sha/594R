@@ -86,12 +86,14 @@ allem <- vmlong %>%
 	mutate("Emissions (g CO$_2$)" = 
 				 	`Fuel consumed   (thousand gallons)` *
 				 	`Emissions (g CO$_2$/gal)` * 1000,
-				 "Emissions (M tons CO$_2$)" = `Emissions (g CO$_2$)` / 1000000)
+				 "Emissions (M tons CO$_2$)" = `Emissions (g CO$_2$)` / 1000000) %>% 
+	relocate(category) %>% 
+	rename(Year = YEAR, "Vehicle category" = category) 
 
 allem %>% 
 	kbl(booktabs = TRUE, escape = FALSE,
 			caption = "Emissions of LDVs and HDVs") %>% 
-	collapse_rows(columns = 2, valign = "middle") %>% 
+	collapse_rows(columns = 1, valign = "middle") %>% 
 	kable_styling(latex_options = c("HOLD_position", "scale_down"))
 ```
 
@@ -99,9 +101,9 @@ Calculating the percentage of emissions from HDVs per year:
 
 ```{r}
 pctem <- allem %>% 
-	select(YEAR, category, `Emissions (M tons CO$_2$)`) %>% 
-	pivot_wider(names_from = category, values_from = `Emissions (M tons CO$_2$)`) %>% 
-	transmute(Year = YEAR,
+	select(Year, `Vehicle category`, `Emissions (M tons CO$_2$)`) %>% 
+	pivot_wider(names_from = `Vehicle category`, values_from = `Emissions (M tons CO$_2$)`) %>% 
+	transmute(Year,
 						"LDV Emissions" = `ALL LDV`,
 						"HDV Emissions" = `ALL HDV`,
 						"HDV Proportion" = `HDV Emissions` /
@@ -109,11 +111,200 @@ pctem <- allem %>%
 
 pctem %>% 
 	kbl(booktabs = TRUE, escape = FALSE,
-			caption = "HDV Emissions Proportion") %>% 
-	kable_styling(latex_options = c("HOLD_position", "scale_down"))
+			caption = "HDV Emissions Proportion",
+			digits = 3) %>% 
+	kable_styling(latex_options = c("HOLD_position"))
 ```
 
 From this we can see that HDVs made up a greater percentage of CO~2~ emissions in 2020 than in 2019.
 
 ## 1.4
+
+Comparing the values I got to the values from the EPS's Greenhouse Gas Emissions Inventory:
+
+```{r}
+epaem <- read_csv("HW2/data/epa.csv") %>% 
+	filter(`U.S. Emissions, Transportation Sector, MMT CO2 eq.` == "Total") %>% 
+	select(`2019`:`2020`)
+
+epaemlist <- epaem %>% as.numeric()
+names(epaemlist) <- epaem %>% colnames()
+
+compareem <- pctem %>% 
+	select(-`HDV Proportion`) %>%
+	mutate("Total Emissions (MMT CO$_2$)" = 
+				 	(`LDV Emissions` + `HDV Emissions`) / 1000000) %>% 
+	tibble("EPA Values (MMT CO$_2$)" = rev(epaemlist))
+
+compareem %>% 
+	kbl(booktabs = TRUE, escape = FALSE,
+			caption = "Comparison to EPA Reported Emissions Values") %>% 
+	kable_styling(latex_options = c("HOLD_position"))
+```
+
+Though the values from my calculations differ from the EPA reported values, they are not wildly different from each other. They are close enough in my judgement that the difference could largely be explained by things like different measuring procedures.
+
+
+
+# 2
+
+The drive cycle I'm analyzing is the "Fleet DNA drayage Representative" cycle from NREL. The cycle is shown in Figure \ref{dc}.
+
+```{r, fig.height=4, fig.cap="Fleet DNA drayage Representative drive cycle.\\label{dc}", fig.pos="H"}
+
+	
+dc <- read_csv("HW2/data/Fleet DNA Drayage Representative .csv")
+
+dc %>% 
+	ggplot(aes(x = `Time (seconds)`, y = `Speed (mph)`)) +
+	geom_line(color = "#004466") +
+	theme_minimal()
+```
+
+I am also using the assumed values in Table \ref{val} for my calculations.
+
+```{r}
+CD <- 0.6
+AV <- 8.5
+mE <- 11000
+mC <- 9000
+CR <- 0.006
+rhoa <- 1.17
+ag <- 9.81
+
+mv <- mE + mC
+
+mina <- -3.5
+maxa <- 2.5
+
+tribble(
+	~Coefficient, ~Symbol, ~Value,
+	"Drag coefficient", "$C_D$", "0.6",
+	"Frontal area", "$A_v$", "8.5 m$^2$",
+	"Empty vehicle weight", "$m_E$", "11,000 kg",
+	"Cargo weight", "$m_C$", "9,000 kg",
+	"Rolling resistance coefficient", "$C_R$", "0.006",
+	"Density of air", "$\\rho_a$", "1.17 kg/m$^3$",
+	"Acceleration of gravity", "$g$", "9.81 m/s$^2$"
+) %>% 
+	kbl(booktabs = TRUE, escape = FALSE,
+			caption = "Assumed Values for Calculations\\label{val}") %>% 
+	kable_styling(latex_options = c("HOLD_position"))
+```
+
+## 2.1
+The road-load equation for power is given by
+\[
+P_V = \frac{1}{2}\rho_aC_DA_vv^3 +
+v\left(C_Rm_vg + m_vg\sin\alpha + m_va_v\right),
+\]
+where $m_v = m_E + m_C$, and $\sin\alpha \approx \text{grade (rise/run)}$.
+
+Using this equation, we can calculate the tractive power for each second in the drive cycle. Note that since this is not a hybrid electric vehicle, there is no regenerative braking, and so all negative values of power are set to 0. We also set a limit on acceleration due to speed gaps causing unrealistic values. The limits are $`r mina` < a < `r maxa`$.
+
+```{r}
+tp <- dc %>% 
+	mutate(
+		time = `Time (seconds)`,
+		v = `Speed (mph)` * 0.44704,
+		araw = (v - lag(v)) / (time - lag(time)),
+		a = case_when(araw < mina ~ mina, araw > maxa ~ maxa, TRUE ~ araw),
+		grade = `Grade (rise/run)`,
+		
+		dpowerraw = (1/2 * rhoa*CD*AV*v^3) / 1000,
+		dpower = ifelse(dpowerraw < 0, 0, dpowerraw),
+		rpowerraw = v*CR*mv*ag / 1000,
+		rpower = ifelse(rpowerraw < 0, 0, rpowerraw),
+		apowerraw = v*mv*a / 1000,
+		apower = ifelse(apowerraw < 0, 0, apowerraw),
+		gpowerraw = v*mv*ag*grade / 1000,
+		gpower = ifelse(gpowerraw < 0, 0, gpowerraw),
+		
+		powerraw = dpowerraw + apowerraw + rpowerraw + gpowerraw,
+		power = ifelse(powerraw < 0, 0, powerraw)
+		) %>% 
+	select(-c(`Time (seconds)`, `Speed (mph)`, `Grade (rise/run)`)) %>% 
+	relocate(time, v)
+```
+
+The plot of the tractive power is given in Figure \ref{tp}.
+
+```{r, fig.cap="Plot of tractive power for drayage drive cycle.\\label{tp}", fig.height=4}
+tp %>% 
+	ggplot(aes(x = time, y = power)) +
+	geom_line(color = "#660044") +
+	theme_minimal() +
+	labs(x = "Time (seconds)",
+			 y = "Tractive Power (kW)")
+```
+
+## 2.2
+```{r}
+timemin <- 10000
+timemax <- 15000
+```
+
+A graph of engine power along with tractive power is given in Figure \ref{powercomp}. I am using only from `r timemin %>% format(scientific=FALSE)` to `r timemax %>% format(scientific=FALSE)` seconds for clarity of the graph.
+
+```{r, fig.height=4, fig.cap="Comparison of engine and tractive power.\\label{powercomp}"}
+powercomp <- tp %>% 
+	filter(time <= timemax, time >= timemin) %>% 
+	transmute(time, power, engine = `Engine Power (kW)`,
+						diff = power - engine) %>% 
+	pivot_longer(-time) %>% 
+	mutate(name = as.factor(name))
+
+powercomp$name <- powercomp$name %>%  
+	fct_relevel(c("power", "engine", "diff"))
+
+powercomp %>% 
+	ggplot(aes(x = time, y = value, color = name)) +
+	geom_line() +
+	labs(x = "Time (seconds)",
+			 y = "Power (kW)") +
+	scale_color_discrete(name = "", labels = c(
+		diff = "Engine - Tractive", engine = "Engine Power", power = "Tractive Power")) +
+	theme_minimal() + 
+  theme(legend.position = 'bottom')
+```
+
+The data generally seem to make sense, as the engine power is often more than the tractive power, which is expected due to losses. Though I am not sure why engine power sometimes exceeds tractive power; it appears to have something to do with the spikes in tractive power, which are perhaps due to some time gaps.
+
+## 2.3
+The total power required to move the vehicle for this drive cycle is `r sum(tp$power, na.rm=TRUE) %>% round() %>% format(scientific=FALSE)` kW.
+
+## 2.4
+```{r}
+drag <- sum(tp$dpower, na.rm = TRUE)
+roll <- sum(tp$rpower, na.rm = TRUE)
+accel <- sum(tp$apower, na.rm = TRUE)
+grav <- sum(tp$gpower, na.rm = TRUE)
+
+total <- sum(drag, roll, accel, grav)
+
+
+tibble(
+	" " = c("Power (kW)", "%"),
+	Drag = c(drag, drag/total * 100),
+	Rolling = c(roll, roll/total * 100),
+	Acceleration = c(accel, accel/total * 100),
+	Gravity = c(grav, grav/total * 100),
+	Total = c(total, total/total * 100)
+) %>% 
+	kbl(booktabs = TRUE, digits = 1, align = 'r',
+			caption = "Components of Total Tractive Power\\label{comp}") %>% 
+	kable_styling(latex_options = c("HOLD_position"))
+```
+
+## 2.5
+```{r}
+hours <- (max(tp$time) - min(tp$time)) / 3600
+
+regen <- -sum(tp$powerraw[tp$powerraw < 0], na.rm = TRUE)
+
+oldpower <- sum(tp$power, na.rm = TRUE)
+newpower <- oldpower - regen
+```
+
+Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen*hours) %>% round() %>% format(scientific=FALSE)` kWh would be available (`r regen %>% round() %>% format(scientific=FALSE)` Kw over `r hours %>% round(2)` hours). If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round() %>% format(scientific=FALSE)` kW, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
 
