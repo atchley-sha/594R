@@ -1,7 +1,7 @@
 ---
-title: "HW 1"
+title: "HW 1: System Tools"
 author: "Hayden Atchley"
-date: "9 September 2022"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
@@ -33,11 +33,11 @@ The causal loop diagram is below:
 
 This analysis is far from perfect, but it gives a good idea of the relationships at play. I made a few assumptions:
 
- - An increase in gas price would lower the demand for (and therefore number of) gas-powered vehicles. This is probably not true in the short term, but is probably true in the long term.
- - Emissions regulations are likely to have an impact on fuel economy, though I'm not sure in which direction. Certain regulations may cause manufacturers to use engines that burn more cleanly, but that might have a negative impact on fuel economy. However, there may also be improvements in engine emissions that _increase_ fuel economy as well.
- - I am assuming that as the supply of rare earth metals decreases, battery technology will improve in a way that uses less of them. This may or not be the case, but I think it's likely.
- 
- 
+- An increase in gas price would lower the demand for (and therefore number of) gas-powered vehicles. This is probably not true in the short term, but is probably true in the long term.
+- Emissions regulations are likely to have an impact on fuel economy, though I'm not sure in which direction. Certain regulations may cause manufacturers to use engines that burn more cleanly, but that might have a negative impact on fuel economy. However, there may also be improvements in engine emissions that _increase_ fuel economy as well.
+- I am assuming that as the supply of rare earth metals decreases, battery technology will improve in a way that uses less of them. This may or not be the case, but I think it's likely.
+
+
 # 3
 I used the logistic growth equation to model electric vehicle shares. The equation is given as
 \[f(t) = \frac{e^{a+bt}}{1+e^{a+bt}}\]
@@ -83,7 +83,7 @@ grid.arrange(ev_plot, cars_plot, ncol = 1)
 
 And the share of EVs:
 
-```{r}
+```{r, fig.height=2.7}
 evshare <- cars %>% 
 	transmute(Year = `Model Year`,
 						Cars = `Production (000)` * 1000) %>% 
@@ -96,20 +96,74 @@ evshare %>%
 	ylab("Share of EVs Sold vs. All Cars")
 ```
 
-Finding a logistic growth model:
+In order to solve this model, I first rearranged the growth equation:
 
-```{r}
-data <- tibble(year = as.numeric(evshare$Year),
-							 share = as.numeric(evshare$ev_share))
+\[f(t) = \frac{e^{a+bt}}{1+e^{a+bt}} \implies
+f(t) + f(t)(e^{a+bt}) = e^{a+bt} \implies
+f(t) = e^{a+bt}(1-f(t)) \]
+\[\implies \frac{f(t)}{1-f(t)} = e^{a+bt} \implies
+\ln\left(\frac{f(t)}{1-f(t)}\right) = a+bt\]
 
-formula <- share~(exp(a+b*year)/(1+exp(a+b*year)))
-formula <- share~(exp(a)/(1+exp(a)))
-formula <- share~SSlogis(year, 1, median(year), 1)
-# model <- 
-	nls(formula,
-			# start = list(a = 1, b = 0.1),
-			data = data,
-			trace = TRUE)
+for all $0 < f(t) < 1$. \medskip
+
+Treating \(\ln\left(\frac{f(t)}{1-f(t)}\right)\) as the new dependent variable and plotting:
+
+```{r, fig.height=2.7}
+logevshare <- evshare %>% 
+	mutate(logshare = log(ev_share),
+				 Year = as.numeric(Year))
+
+fitline <- lm(logshare~Year, logevshare)
+
+logevshare %>% 
+	ggplot(aes(x = Year, y = logshare)) +
+	geom_point() +
+	geom_smooth(method = 'lm') +
+	scale_x_continuous(
+		breaks = min(logevshare$Year):max(logevshare$Year)) +
+	theme(panel.grid.minor.x = element_blank()) +
+	ylab("Log of EV Share")
 ```
 
+Where the best-fit line is given by \(\ln\left(\frac{f(t)}{1-f(t)}\right) = -788.6 + 0.3889t,
+\ \therefore\  a=-788.6, b=0.3889\). Putting these values back in the original equation gives:
 
+\[f(t) = \frac{e^{-788.6 + 0.3889t}}{1+e^{-788.6 + 0.3889t}}.\]
+
+And adding this function to the original plot and expanding the time range:
+
+```{r}
+a <- fitline$coefficients["(Intercept)"]
+b <- fitline$coefficients["Year"]
+
+growthfun <- function(x){
+	exp(a+b*x)/(1+exp(a+b*x))
+}
+
+evshare %>%
+	mutate(Year = as.numeric(Year)) %>% 
+	ggplot(aes(x = Year, y = ev_share)) +
+	geom_point() +
+	geom_function(fun = growthfun) +
+	xlim(NA,2050) +
+	ylab("Share of EVs Sold vs. All Cars")
+```
+
+```{r}
+time_at_share <- function(share){
+	(log(share/(1-share)) - a) / b
+}
+```
+
+Solving the equation
+\[0.5 = \frac{e^{-788.6 + 0.3889t}}{1+e^{-788.6 + 0.3889t}}\]
+gives a value of `r time_at_share(0.5) %>% round(1)`, which is the time at which EV sales account for half of all car sales.
+
+\newpage
+
+# 4
+The Annual Energy Outlook's estimation for EV penetration is given as:
+
+![Share of EV sales (AEO estimate).](image/AEO_estimate.png)
+
+This is a much shallower prediction, i.e. EVs do not penetrate nearly as quickly.

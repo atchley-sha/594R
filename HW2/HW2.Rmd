@@ -86,12 +86,34 @@ allem <- vmlong %>%
 	mutate("Emissions (g CO$_2$)" = 
 				 	`Fuel consumed   (thousand gallons)` *
 				 	`Emissions (g CO$_2$/gal)` * 1000,
-				 "Emissions (M tons CO$_2$)" = `Emissions (g CO$_2$/gal)` / 1000000)
+				 "Emissions (M tons CO$_2$)" = `Emissions (g CO$_2$)` / 1000000)
 
 allem %>% 
 	kbl(booktabs = TRUE, escape = FALSE,
 			caption = "Emissions of LDVs and HDVs") %>% 
+	collapse_rows(columns = 2, valign = "middle") %>% 
 	kable_styling(latex_options = c("HOLD_position", "scale_down"))
 ```
 
+Calculating the percentage of emissions from HDVs per year:
+
+```{r}
+pctem <- allem %>% 
+	select(YEAR, category, `Emissions (M tons CO$_2$)`) %>% 
+	pivot_wider(names_from = category, values_from = `Emissions (M tons CO$_2$)`) %>% 
+	transmute(Year = YEAR,
+						"LDV Emissions" = `ALL LDV`,
+						"HDV Emissions" = `ALL HDV`,
+						"HDV Proportion" = `HDV Emissions` /
+							(`HDV Emissions` + `LDV Emissions`))
+
+pctem %>% 
+	kbl(booktabs = TRUE, escape = FALSE,
+			caption = "HDV Emissions Proportion") %>% 
+	kable_styling(latex_options = c("HOLD_position", "scale_down"))
+```
+
+From this we can see that HDVs made up a greater percentage of CO~2~ emissions in 2020 than in 2019.
+
+## 1.4
 
