@@ -18,6 +18,8 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(gridExtra)
 library(kableExtra)
+
+options(scipen = 999)
 ```
 
 # 1
@@ -221,7 +223,9 @@ tp <- dc %>%
 		gpower = ifelse(gpowerraw < 0, 0, gpowerraw),
 		
 		powerraw = dpowerraw + apowerraw + rpowerraw + gpowerraw,
-		power = ifelse(powerraw < 0, 0, powerraw)
+		power = ifelse(powerraw < 0, 0, powerraw),
+		
+		dist = v*(time - lag(time))
 		) %>% 
 	select(-c(`Time (seconds)`, `Speed (mph)`, `Grade (rise/run)`)) %>% 
 	relocate(time, v)
@@ -244,13 +248,13 @@ timemin <- 10000
 timemax <- 15000
 ```
 
-A graph of engine power along with tractive power is given in Figure \ref{powercomp}. I am using only from `r timemin %>% format(scientific=FALSE)` to `r timemax %>% format(scientific=FALSE)` seconds for clarity of the graph.
+A graph of engine power along with tractive power is given in Figure \ref{powercomp}. I am using only from `r timemin` to `r timemax` seconds for clarity of the graph.
 
 ```{r, fig.height=4, fig.cap="Comparison of engine and tractive power.\\label{powercomp}"}
 powercomp <- tp %>% 
 	filter(time <= timemax, time >= timemin) %>% 
 	transmute(time, power, engine = `Engine Power (kW)`,
-						diff = power - engine) %>% 
+						diff = engine - power) %>% 
 	pivot_longer(-time) %>% 
 	mutate(name = as.factor(name))
 
@@ -263,15 +267,15 @@ powercomp %>%
 	labs(x = "Time (seconds)",
 			 y = "Power (kW)") +
 	scale_color_discrete(name = "", labels = c(
-		diff = "Engine - Tractive", engine = "Engine Power", power = "Tractive Power")) +
+		diff = "Tractive minus Engine", engine = "Engine Power", power = "Tractive Power")) +
 	theme_minimal() + 
   theme(legend.position = 'bottom')
 ```
 
-The data generally seem to make sense, as the engine power is often more than the tractive power, which is expected due to losses. Though I am not sure why engine power sometimes exceeds tractive power; it appears to have something to do with the spikes in tractive power, which are perhaps due to some time gaps.
+The data generally seem to make sense, as the engine power is often more than the tractive power, which is expected due to losses. Though I am not sure why tractive power sometimes exceeds engine power; it appears to have something to do with the spikes in tractive power, which are perhaps due to some time gaps.
 
 ## 2.3
-The total power required to move the vehicle for this drive cycle is `r sum(tp$power, na.rm=TRUE) %>% round() %>% format(scientific=FALSE)` kW.
+The total power required to move the vehicle for this drive cycle is `r sum(tp$power, na.rm=TRUE) %>% round()` kW.
 
 ## 2.4
 ```{r}
@@ -306,5 +310,18 @@ oldpower <- sum(tp$power, na.rm = TRUE)
 newpower <- oldpower - regen
 ```
 
-Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen*hours) %>% round() %>% format(scientific=FALSE)` kWh would be available (`r regen %>% round() %>% format(scientific=FALSE)` Kw over `r hours %>% round(2)` hours). If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round() %>% format(scientific=FALSE)` kW, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
+Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen*hours) %>% round()` kWh would be available (`r regen %>% round()` kW over `r hours %>% round(2)` hours). If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round()` kW, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
 
+## 2.6
+```{r}
+enginemove <- tp %>% 
+	mutate(newengine = `Engine Power (kW)` - 7,
+				 newengine = ifelse(newengine < 0, 0, newengine))
+
+moveenergy <- sum(enginemove$newengine, na.rm = TRUE)*hours
+```
+
+Assuming an auxiliary power load of 7 kW, the engine power used to move the vehicle is $P_{Engine} - 7$ kW, but not less than 0 kW. Finding the total energy expended by the engine attempting to move the vehicle gives `r moveenergy %>% round()` kWh. The total energy actually required to move the vehicle is `r (oldpower*hours) %>% round()` kWh, so the efficiency of the drivetrain is `r (oldpower*hours/moveenergy * 100) %>% round(1)`%.
+
+## 2.7
+Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F[\text{gal}] = \frac{`r (oldpower*hours) %>% round()`[\text{kWh}]}{`r energy`[\text{kWh/gal}]}/`r eff` = `r (fuel <- oldpower*hours/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (totdist * .0006213712) %>% round(1)` miles, giving
