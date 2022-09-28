@@ -190,7 +190,8 @@ tribble(
 	"Acceleration of gravity", "$g$", "9.81 m/s$^2$"
 ) %>% 
 	kbl(booktabs = TRUE, escape = FALSE,
-			caption = "Assumed Values for Calculations\\label{val}") %>% 
+			caption = "Assumed Values for Calculations\\label{val}",
+			linesep = "") %>% 
 	kable_styling(latex_options = c("HOLD_position"))
 ```
 
@@ -208,8 +209,9 @@ Using this equation, we can calculate the tractive power for each second in the 
 tp <- dc %>% 
 	mutate(
 		time = `Time (seconds)`,
+		t = time - lag(time),
 		v = `Speed (mph)` * 0.44704,
-		araw = (v - lag(v)) / (time - lag(time)),
+		araw = (v - lag(v)) / t,
 		a = case_when(araw < mina ~ mina, araw > maxa ~ maxa, TRUE ~ araw),
 		grade = `Grade (rise/run)`,
 		
@@ -225,7 +227,9 @@ tp <- dc %>%
 		powerraw = dpowerraw + apowerraw + rpowerraw + gpowerraw,
 		power = ifelse(powerraw < 0, 0, powerraw),
 		
-		dist = v*(time - lag(time))
+		energy = power*t/3600, #kWh
+		
+		dist = v*t
 		) %>% 
 	select(-c(`Time (seconds)`, `Speed (mph)`, `Grade (rise/run)`)) %>% 
 	relocate(time, v)
@@ -244,8 +248,8 @@ tp %>%
 
 ## 2.2
 ```{r}
-timemin <- 10000
-timemax <- 15000
+timemin <- 13900
+timemax <- 14000
 ```
 
 A graph of engine power along with tractive power is given in Figure \ref{powercomp}. I am using only from `r timemin` to `r timemax` seconds for clarity of the graph.
@@ -254,7 +258,7 @@ A graph of engine power along with tractive power is given in Figure \ref{powerc
 powercomp <- tp %>% 
 	filter(time <= timemax, time >= timemin) %>% 
 	transmute(time, power, engine = `Engine Power (kW)`,
-						diff = engine - power) %>% 
+						diff = power - engine) %>% 
 	pivot_longer(-time) %>% 
 	mutate(name = as.factor(name))
 
@@ -272,23 +276,23 @@ powercomp %>%
   theme(legend.position = 'bottom')
 ```
 
-The data generally seem to make sense, as the engine power is often more than the tractive power, which is expected due to losses. Though I am not sure why tractive power sometimes exceeds engine power; it appears to have something to do with the spikes in tractive power, which are perhaps due to some time gaps.
+The data generally seem to make sense, as the engine power is often more than the tractive power, which is expected due to losses. Though I am not sure why tractive power sometimes exceeds engine power; it appears to have something to do with the spikes in tractive power, which might be due to some time gaps in the data, or possibly a small temporal offset between the engine and tractive power.
 
 ## 2.3
-The total power required to move the vehicle for this drive cycle is `r sum(tp$power, na.rm=TRUE) %>% round()` kW.
+The total energy required to move the vehicle for this drive cycle is `r sum(tp$energy, na.rm=TRUE) %>% round()` kWh.
 
 ## 2.4
 ```{r}
-drag <- sum(tp$dpower, na.rm = TRUE)
-roll <- sum(tp$rpower, na.rm = TRUE)
-accel <- sum(tp$apower, na.rm = TRUE)
-grav <- sum(tp$gpower, na.rm = TRUE)
+drag <- sum(tp$dpower*tp$t/3600, na.rm = TRUE)
+roll <- sum(tp$rpower*tp$t/3600, na.rm = TRUE)
+accel <- sum(tp$apower*tp$t/3600, na.rm = TRUE)
+grav <- sum(tp$gpower*tp$t/3600, na.rm = TRUE)
 
 total <- sum(drag, roll, accel, grav)
 
 
 tibble(
-	" " = c("Power (kW)", "%"),
+	" " = c("Energy (kWh)", "%"),
 	Drag = c(drag, drag/total * 100),
 	Rolling = c(roll, roll/total * 100),
 	Acceleration = c(accel, accel/total * 100),
@@ -302,15 +306,14 @@ tibble(
 
 ## 2.5
 ```{r}
-hours <- (max(tp$time) - min(tp$time)) / 3600
+regen <- -sum(tp$powerraw[tp$powerraw < 0] * 
+								tp$t[tp$powerraw < 0]/3600, na.rm = TRUE)
 
-regen <- -sum(tp$powerraw[tp$powerraw < 0], na.rm = TRUE)
-
-oldpower <- sum(tp$power, na.rm = TRUE)
-newpower <- oldpower - regen
+oldpower <- sum(tp$energy, na.rm = TRUE)
+newpower <- oldpower - (regen/2)
 ```
 
-Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen*hours) %>% round()` kWh would be available (`r regen %>% round()` kW over `r hours %>% round(2)` hours). If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round()` kW, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
+Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen) %>% round()` kWh would be available. If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round()` kWh, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
 
 ## 2.6
 ```{r}
@@ -318,10 +321,13 @@ enginemove <- tp %>%
 	mutate(newengine = `Engine Power (kW)` - 7,
 				 newengine = ifelse(newengine < 0, 0, newengine))
 
-moveenergy <- sum(enginemove$newengine, na.rm = TRUE)*hours
+moveenergy <- sum(enginemove$newengine*enginemove$t/3600, na.rm = TRUE)
 ```
 
-Assuming an auxiliary power load of 7 kW, the engine power used to move the vehicle is $P_{Engine} - 7$ kW, but not less than 0 kW. Finding the total energy expended by the engine attempting to move the vehicle gives `r moveenergy %>% round()` kWh. The total energy actually required to move the vehicle is `r (oldpower*hours) %>% round()` kWh, so the efficiency of the drivetrain is `r (oldpower*hours/moveenergy * 100) %>% round(1)`%.
+Assuming an auxiliary power load of 7 kW, the engine power used to move the vehicle is $P_{Engine} - 7$ kW, but not less than 0 kW. Finding the total energy expended by the engine attempting to move the vehicle gives `r moveenergy %>% round()` kWh. The total energy actually required to move the vehicle is `r (oldpower) %>% round()` kWh, so the efficiency of the drivetrain is `r (oldpower/moveenergy * 100) %>% round(1)`%.
 
 ## 2.7
-Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F[\text{gal}] = \frac{`r (oldpower*hours) %>% round()`[\text{kWh}]}{`r energy`[\text{kWh/gal}]}/`r eff` = `r (fuel <- oldpower*hours/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (totdist * .0006213712) %>% round(1)` miles, giving
+Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F = \frac{`r (oldpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel1 <- oldpower/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (miles <- (totdist * .0006213712)) %>% round(1)` miles, giving an overall fuel economy of `r (miles/fuel1) %>% round(2)` mpg, and a fuel consumption of `r (fuel1/miles*1000) %>% round()` gallons per 1000 miles.
+
+## 2.8
+The energy required in the regenerative-braking scenario (2.5) is `r newpower %>% round()` kWh. The fuel needed is now $F = \frac{`r (newpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel2 <- newpower/energy/eff) %>% round()`\ \text{gal}$, with a fuel economy and consumption of `r (miles/fuel2) %>% round(2)` mpg and `r (fuel2/miles*1000) %>% round()` gallons per 1000 miles. If this drive cycle (`r (miles <- (totdist * .0006213712)) %>% round(1)` miles) is representative of a typical day, then at 5 days per week and 52 weeks per year, the fuel saved is $5 \text{[days/wk]} \times 52 \text{[wk/yr]} \times (`r fuel1 %>% round()` - `r fuel2 %>% round()`) \text{[gal]} = `r (fuelsave <- 5*52*(fuel1-fuel2)) %>% round` \text{[gal/yr]}$ for each truck. Given a current (26 Sept. 2022) diesel price of \$`r (price <- 4.889)`/gal, this amounts to a savings of \$`r (price*fuelsave) %>% round()` per year per truck.
