@@ -4,7 +4,7 @@ author: "Hayden Atchley"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
-    latex_engine: lualatex
+    latex_engine: xelatex
 mainfont: Gentium Book Basic
 ---
 
@@ -331,3 +331,89 @@ Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC
 
 ## 2.8
 The energy required in the regenerative-braking scenario (2.5) is `r newpower %>% round()` kWh. The fuel needed is now $F = \frac{`r (newpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel2 <- newpower/energy/eff) %>% round()`\ \text{gal}$, with a fuel economy and consumption of `r (miles/fuel2) %>% round(2)` mpg and `r (fuel2/miles*1000) %>% round()` gallons per 1000 miles. If this drive cycle (`r (miles <- (totdist * .0006213712)) %>% round(1)` miles) is representative of a typical day, then at 5 days per week and 52 weeks per year, the fuel saved is $5 \text{[days/wk]} \times 52 \text{[wk/yr]} \times (`r fuel1 %>% round()` - `r fuel2 %>% round()`) \text{[gal]} = `r (fuelsave <- 5*52*(fuel1-fuel2)) %>% round` \text{[gal/yr]}$ for each truck. Given a current (26 Sept. 2022) diesel price of \$`r (price <- 4.889)`/gal, this amounts to a savings of \$`r (price*fuelsave) %>% round()` per year per truck.
+
+
+
+# 3
+From Annual Energy Outlook 2022 Table 40, we get that the 2021 fuel economies of certain vehicle technologies are as follows:
+
+```{r}
+gasmpg <- 42.94
+hybmpg <- 62.51
+evmpg <- 101.9
+
+kwhtogal <- 0.03
+
+coalem <- 767/757763 * 1000
+ngem <- 576/1402438 * 1000
+```
+
+- ICE vehicles: `r gasmpg` mpg
+- Hybrid vehicles: `r hybmpg` mpge
+- 200 mile range EVs: `r evmpg` mpge
+
+From the EIA we obtain the emission rate of coal and natural gas energy production:
+
+```{r}
+emissions <- tibble(
+	"Energy Source" = c("Coal", "Natural Gas", "Petroleum"),
+	electricity = c(757763, 1402438, 13665),
+	co2 = c(767, 576, 13),
+	emrate = co2 / electricity * 1000
+	)
+
+emissions %>% 
+	rename(
+		"Electricity (M kWh)" = electricity,
+		"CO$_2$ Emissions (M MT)" = co2,
+		"CO$_2$ per kWh (kg)" = emrate
+	) %>% 
+	kbl(digits = 3,
+			caption = "CO$_2$ Emissions per Kilowatt-hour Produced",
+			escape = FALSE,
+			booktabs = TRUE) %>% 
+	kable_styling(latex_options = c("HOLD_position"))
+
+emc <- emissions$co2[1]
+emng <- emissions$co2[2]
+
+elecc <- emissions$electricity[1]
+elecng <- emissions$electricity[2]
+
+emratep <- emissions$emrate[3]
+
+weightem <- ((emc + emng) / (elecc + elecng)) * 1000
+```
+
+Assuming the electricity used in the EVs is produced from coal and natural gas, we can calculate an average of the two emission rates. By summing the total emissions and total energy generated, we find that the overall emission rate is $\frac{`r emc` + `r emng`}{`r elecc` + `r elecng`} \times 1000 = `r weightem %>% round(2)`$ kg CO~2~ per kWh.
+
+## 3.1
+The following table shows information on CO~2~ emissions by vehicle type. I am assuming that the emission rate from petroleum electricity generation is similar enough to the rate when using an ICE vehicle to use in these calculations. I am also using a conversion factor of 1 kWh to `r kwhtogal` gallons of gasoline.
+
+```{r}
+emtable <- tibble(
+	"Vehicle Type" = c("ICE", "Hybrid", "EV"),
+	mpg = c(gasmpg, hybmpg, evmpg),
+	mpkwh = mpg*kwhtogal,
+	co2pkwh = c(emratep, emratep, weightem),
+	co2pmi = co2pkwh / mpkwh * 1000
+)
+
+emtable %>% 
+	rename(
+		"MPG (equiv)" = mpg,
+		"Miles per kWh" = mpkwh,
+		"CO$_2$ per kWh (kg)" = co2pkwh,
+		"CO$_2$ per Mile (g)" = co2pmi
+	) %>% 
+	kbl(digits = c(0,1,2,3,0),
+			caption = "CO$_2$ Emissions per Mile by Vehicle Type",
+			escape = FALSE,
+			booktabs = TRUE) %>% 
+	kable_styling(latex_options = c("HOLD_position"))
+```
+
+The EV has the lowest emission rate per mile, while the ICE vehicle has the highest. This follows my intuition, as even with the inefficiencies in electricity production EVs are much more efficient per kWh than gas-powered vehicles. The emission rate of the EVs could theoretically fall even further if cleaner electricity sources are used.
+
+## 3.2
+Using the EPA 2020 average of 25.5 mpg and 350 g CO~2~/mile for the ICE vehicle, the hybrid vehicle now has the worst emission rate. Though in reality this probably would not be the case; a lower emission rate per gallon of gasoline used would benefit both ICE and hybrid vehicles. It's possible my previous assumption that emissions would be similar between an ICE and petroleum electricity generation is misguided, in which case the numbers I calculated may change significantly.
