@@ -417,3 +417,6 @@ The EV has the lowest emission rate per mile, while the ICE vehicle has the high
 
 ## 3.2
 Using the EPA 2020 average of 25.5 mpg and 350 g CO~2~/mile for the ICE vehicle, the hybrid vehicle now has the worst emission rate. Though in reality this probably would not be the case; a lower emission rate per gallon of gasoline used would benefit both ICE and hybrid vehicles. It's possible my previous assumption that emissions would be similar between an ICE and petroleum electricity generation is misguided, in which case the numbers I calculated may change significantly.
+
+## 3.3
+Some notable sources of related emissions not included in the previous calculations are: vehicle production, transporting vehicles to dealerships or similar, refining of crude oil into gasoline, and mining operations needed for coal/natural gas.
