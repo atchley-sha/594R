@@ -1,0 +1,55 @@
+---
+title: Project Proposal
+author: Hayden Atchley
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    toc: false
+    number_sections: false
+mainfont: Gentium Book Basic
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# Introduction
+
+Recently, electric vehicles (EVs) have gained significant public awareness and various levels of support. Generally the adoption of EVs is seen as a good thing, as there are many clear benefits over internal combustion engine (ICE) vehicles. Perhaps the most obvious is that EVs have no emissions, since they are driven entirely by electric motors. Another important advantage is efficiency: while an ICE vehicle will convert around ####% of the fuel's stored energy into motion, EVs are nearly 100% efficient. Electric motors are also efficient over a large range of rotational speeds, whereas ICEs are only efficient from roughly ### to ### rpm.
+
+However, EVs are not always universally superior to ICE vehicles. One major consideration is that the range of EVs is lower than may be practical in certain applications. Though EVs are more efficient at converting stored energy into motion, gasoline and diesel are more energy-dense than batteries, and so that energy becomes harder to store in an EV by comparison. What truly makes this a concern is the time required to recharge an EV's battery compared to the time to refuel an ICE vehicle's tank. Though there are relatively fast charging standards available, as of now none of them are nearly as fast as filling up a car at a gas station.
+
+This charging problem, though, is not generally a concern for personal vehicles. Even the slowest of charging standards are able to charge at ####W, which if charged overnight could easily offset a daily commute of ### miles. However, for one major part of the transportation industry, namely commercial transportation, EV charging becomes a major consideration. Long-haul trucks, bus rapid transit (BRT), and even local bus networks may not be as well-suited for EV adoption.
+
+# Research Question
+
+So how can a local transit agency decide if electrification of their bus network is a worthwhile pursuit? What are the factors that must be considered, and what are some potential problems and/or solutions? What are the costs of these solutions, and are they practical?
+
+I aim to analyze these questions, with a specific consideration of Utah Transit Authority's (UTA's) bus network, including the Utah Valley eXpress (UVX) BRT as well as the local bus network in the Provo/Orem area. Ultimately I plan to determine what would be required to electrify this bus system and if it is feasible for UTA to do so.
+
+I also hope to provide somewhat of a framework to help in making similar decisions in the future, both for UTA and other agencies. Recognizing these required considerations and planning for them is an important step in making future electrification easier and more worthwhile.
+
+# Preliminary Literature Review
+
+
+
+
+
+
+
+
+
+
+
+# What methods/data will I use to answer the question?
+
+I will 
+
+
+
