@@ -1,0 +1,138 @@
+---
+title: "HW #4: Analyze real-world emissions data"
+author: Hayden Atchley
+date: "`r Sys.Date()`"
+mainfont: Gentium Book Basic
+output:
+  bookdown::pdf_document2:
+    toc: false
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+
+pacman::p_load(tidyverse, kableExtra, zfit, broom, ggthemes, DescTools)
+```
+
+
+```{r}
+feat <- read_csv("data/feat.class.example.csv")
+```
+
+# 1
+
+```{r}
+#| em-density,
+#| fig.cap="Emissions density by date.",
+#| fig.pos="H"
+
+feat1 <- feat %>% 
+	replace_na(list(NO_g_kg = 0, NO2_g_kg = 0, HC_g_kg = 0, CO_g_kg = 0)) %>% 
+	mutate(NOx_g_kg = NO_g_kg + NO2_g_kg) %>% 
+	select(DATE, CO_g_kg, HC_g_kg, NOx_g_kg, location, VEH_ID) %>% 
+	pivot_longer(-c(DATE, location, VEH_ID), names_to = "pollutant", values_to = "amount") %>% 
+	mutate(pollutant = str_remove(pollutant, "_.+"))
+
+feat1 %>% 
+	ggplot() +
+	geom_density(aes(x = amount, color = pollutant)) +
+	facet_wrap(~DATE) +
+	lims(x = c(NA,200),
+			 y = c(NA,0.1)) +
+	labs(x = "Emmission Rate (g / kg fuel)",
+			 y = "kernel density",
+			 color = "Pollutant")
+```
+
+## 1.1
+
+```{r}
+feat1 %>% 
+	group_by(location, pollutant) %>% 
+	summarise(max_emisions = max(amount), median_emissions = median(amount)) %>% 
+	mutate("max / median" = max_emisions / median_emissions) %>% 
+	kbl(booktabs = TRUE, digits = 2, linesep = "") %>% 
+	kable_styling(latex_options = "HOLD_position")
+```
+
+## 1.2
+
+Looking at Figure \@ref(fig:em-density), NOx appears to have quite a skewed distribution, though CO has a few extreme outliers.
+
+# 2
+
+```{r}
+#| fig.height=3
+
+feat2 <- feat1 %>% 
+	select(VEH_ID, pollutant, amount) %>% 
+	pivot_wider(names_from = pollutant, values_from = amount)
+
+feat2 %>% 
+	ggplot(aes(x = CO, y = HC)) +
+	geom_point() +
+	geom_smooth(method = 'lm') +
+	theme_pander()
+```
+
+```{r}
+#| fig.height=3
+
+feat2 %>% 
+	ggplot(aes(x = CO, y = NOx)) +
+	geom_point() +
+	geom_smooth(method = 'lm') +
+	theme_pander()
+```
+
+```{r}
+fit2 <- feat2 %>% 
+	zlm(CO ~ NOx + HC) %>% 
+	summary()
+
+fit2 %>% 
+	tidy() %>% 
+	kbl(booktabs = TRUE, digits = c(0,2,2,2,3), escape = FALSE) %>% 
+	footnote(paste0("$R^2$ = ", fit2$adj.r.squared %>% round(3)),
+					 general_title = "") %>% 
+	kable_styling(latex_options = "HOLD_position")
+```
+
+While it appears that vehicles with more CO emissions also have more NOx and HC emissions (both of these slopes/coefficients are positive), the $R^2$ value is quite low. There could be many other factors explaining the variance in emission rates.
+
+# 3
+
+
+
+# 4
+
+```{r}
+feat1 %>% 
+	filter(pollutant == "CO") %>% 
+	select(-pollutant, -VEH_ID) %>% 
+	group_by(DATE, location) %>% 
+	summarise(
+		name = names(MeanCI(amount, conf.level = 0.9)),
+		value = MeanCI(amount, conf.level = 0.9)) %>% 
+	pivot_wider()
+```
+
+```{r}
+feat1 %>% 
+	filter(pollutant == "CO") %>% 
+	select(-pollutant, -VEH_ID) %>% 
+	ggplot(aes(y = DATE, x = amount, fill = location)) +
+	geom_violin() +
+	stat_summary(
+		fun.data = function(x) MeanCI(x, conf.level = 0.9) %>% 
+			`names<-`(c("y", "ymin", "ymax")),
+		geom = "errorbar",
+		width = 0.3) +
+	stat_summary(fun = mean, geom = "point")
+```
+
