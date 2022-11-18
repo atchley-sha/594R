@@ -42,8 +42,9 @@ feat1 %>%
 	ggplot() +
 	geom_density(aes(x = amount, color = pollutant)) +
 	facet_wrap(~DATE) +
-	lims(x = c(NA,200),
-			 y = c(NA,0.1)) +
+	theme_pander() +
+	lims(x = c(NA,100),
+			 y = c(NA, 0.3)) +
 	labs(x = "Emmission Rate (g / kg fuel)",
 			 y = "kernel density",
 			 color = "Pollutant")
@@ -97,9 +98,10 @@ fit2 <- feat2 %>%
 
 fit2 %>% 
 	tidy() %>% 
-	kbl(booktabs = TRUE, digits = c(0,2,2,2,3), escape = FALSE) %>% 
+	kbl(booktabs = TRUE, digits = c(0,2,2,2,3)) %>% 
 	footnote(paste0("$R^2$ = ", fit2$adj.r.squared %>% round(3)),
-					 general_title = "") %>% 
+					 general_title = "",
+					 escape = FALSE) %>% 
 	kable_styling(latex_options = "HOLD_position")
 ```
 
@@ -119,10 +121,17 @@ feat1 %>%
 	summarise(
 		name = names(MeanCI(amount, conf.level = 0.9)),
 		value = MeanCI(amount, conf.level = 0.9)) %>% 
-	pivot_wider()
+	pivot_wider() %>% 
+	kbl(booktabs = TRUE, digits = c(0,0,2,2,1)) %>% 
+	kable_styling(latex_options = "HOLD_position")
 ```
 
 ```{r}
+#| mean-conf,
+#| fig.cap = "CO emission rate for each day. The bars show the mean and 90% confidence interval for the mean.",
+#| fig.pos = "H",
+#| fig.height = 3
+
 feat1 %>% 
 	filter(pollutant == "CO") %>% 
 	select(-pollutant, -VEH_ID) %>% 
@@ -133,6 +142,20 @@ feat1 %>%
 			`names<-`(c("y", "ymin", "ymax")),
 		geom = "errorbar",
 		width = 0.3) +
-	stat_summary(fun = mean, geom = "point")
+	stat_summary(fun = mean, geom = "point") +
+	theme_pander() +
+	xlim(NA, 200) +
+	labs(
+		x = "CO Emission Rate (g / kg fuel)",
+		y = "Date",
+		fill = "Location")
 ```
+
+```{r}
+feat1 %>% 
+	filter(pollutant == "CO") %>% 
+	aov(amount ~ location, data = .) %>% 
+	TukeyHSD()
+```
+
 
