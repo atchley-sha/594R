@@ -151,11 +151,54 @@ feat1 %>%
 		fill = "Location")
 ```
 
+The table below shows a Tukey-Kramer test for multiple variance based on emissions test location. None of the _p_-values indicate significant results, so we can't conclude that the means are different from each other.
+
 ```{r}
 feat1 %>% 
 	filter(pollutant == "CO") %>% 
 	aov(amount ~ location, data = .) %>% 
-	TukeyHSD()
+	TukeyHSD() %>% 
+	tidy() %>% 
+	select(-term, -null.value)
 ```
 
+## 4.1
+
+Assuming the re-sampling method refers to a permutation/randomization test, the main advantage is that no assumptions need to be made regarding skewness, normality, or outliers. The main disadvantage is that it is computationally intensive to compare all permutations of the data points, especially when the data sets are large. Often a smaller subset of permutations is performed, which can usually offer a good approximation of the full permutation test.
+
+# 5
+
+
+
+# 6
+
+```{r}
+site <- read_csv("data/CO.site.average.date.2023.csv") %>% 
+	mutate(DATE = as.Date(DATE, format = "%m/%d/%Y"))
+```
+
+Looking at a plot of the emission rates over time, there doesn't appear to be any meaningful trend:
+
+```{r}
+#| fig.pos = "H",
+#| fig.height = 3
+
+site %>% 
+	ggplot(aes(x = DATE, y = mean_CO_g_kg)) +
+	geom_point() +
+	theme_pander() +
+	labs(
+		x = "Date",
+		y = "Mean CO Emissions (g / kg fuel)"
+	)
+```
+
+Calculating the mean of these values with a 95% confidence interval gives:
+
+```{r}
+MeanCI(site$mean_CO_g_kg) %>% 
+	bind_rows() %>% 
+	kbl(digits = 1, booktabs = TRUE) %>% 
+	kable_styling(latex_options = "HOLD_position")
+```
 
