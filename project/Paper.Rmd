@@ -1,0 +1,45 @@
+---
+title: Electrification of Bus Networks in Provo, Utah (DRAFT)
+author: Hayden Atchley
+date: "22 November 2022"
+documentclass: article
+geometry:
+  - letterpaper
+  - margin=1in
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    toc: false
+    number_sections: false
+header-includes:
+  - \usepackage{setspace}
+mainfont: Gentium Book Basic
+bibliography: references.bib
+---
+
+\doublespace
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# Introduction
+
+Recently, electric vehicles (EVs) have gained significant public awareness and various levels of support. Generally the adoption of EVs is seen as a good thing, as there are many clear benefits over internal combustion engine (ICE) vehicles. Perhaps the most obvious is that EVs have no emissions, since they are driven entirely by electric motors. Another important advantage is efficiency: while an ICE vehicle will convert around 20% of the fuel's stored energy into motion [@gas-efficiency], EVs are around 90% efficient [@ev-efficiency]. Electric motors are also efficient over a large range of rotational speeds, whereas ICEs are only efficient at a much narrower range of speeds.
+
+However, EVs are not always universally superior to ICE vehicles. One major consideration is that the range of EVs is lower than may be practical in certain applications. Though EVs are more efficient at converting stored energy into motion, gasoline and diesel are more energy-dense than batteries, and so that energy becomes harder to store in an EV by comparison. What truly makes this a concern is the time required to recharge an EV's battery compared to the time to refuel an ICE vehicle's tank. Though there are relatively fast charging standards available, as of now none of them are nearly as fast as filling up a car at a gas station [@epa-charging].
+
+This charging problem, though, is not generally a concern for personal vehicles. Even the slowest of charging standards are able to charge at up to 1.9kW, which if charged either overnight or at a workplace for 8 hours could easily offset a daily commute of 40 miles or more [@epa-charging]. However, for one major part of the transportation industry, namely commercial transportation, EV charging becomes a major consideration. Long-haul trucks, bus rapid transit (BRT), and even local bus networks may not be as well-suited for EV adoption. But despite the difficulty of solving the charging problem, electrification of these systems can still be a worthwhile goal, due to the many advantages of EVs. In fact, many transit agencies are using electric bus fleets XXXXXXXX, and others are in the process of transitioning to EVs XXXXXXX.
+
+# Charging Solutions
+
+Developing charging infrastructure is the most significant prerequisite to deploying a fleet of EV buses. There are currently several options available for EV charging. Level 1 and 2 charging as well as DC fast charging use a plug-in connector to transfer power [@epa-charging], and other options such as wireless inductive charging exist and are being developed upon [@Klontz1993; @Panchal2018].
+
+
+# Research Question
+
+# References 
