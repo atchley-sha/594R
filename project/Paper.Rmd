@@ -37,9 +37,17 @@ This charging problem, though, is not generally a concern for personal vehicles.
 
 # Charging Solutions
 
-Developing charging infrastructure is the most significant prerequisite to deploying a fleet of EV buses. There are currently several options available for EV charging. Level 1 and 2 charging as well as DC fast charging use a plug-in connector to transfer power [@epa-charging], and other options such as wireless inductive charging exist and are being developed upon [@Klontz1993; @Panchal2018].
+Developing charging infrastructure is the most significant prerequisite to deploying a fleet of EV buses. There are currently several options available for EV charging. Level 1 and 2 charging as well as DC fast charging use a plug-in connector to transfer power [@epa-charging], and other options such as wireless inductive charging exist and are being developed upon [@Klontz1993; @Panchal2018]. Perhaps somewhat unique to buses are <><><fancy overhead chargers><><>, where a rail on the bus extends to make contact with an overhead power supply at a bus stop.
+
+While the level 1 and level 2 EV charging standards work well for personal vehicles, which sit idle for large parts of the day, these are relatively slow standards. A personal vehicle can expect about 25 miles of range per hour of level 2 charging [@epa-charging]. A bus, which weighs several times that of a personal vehicle [@car-weights], would get a fraction of that range (since work/energy is proportional to mass). Many bus routes run for most of the day, and even with an 8-hour daily level 2 charge a bus may only gain about 50 miles of daily range. A city bus running for 12 hours per day with an average speed of 12mph would need more than double that. Exclusively using level 2 charging would in many cases necessitate at least a doubling of fleet size to maintain those routes, which is impractical.
+
+DC fast charging can charge vehicles on the order of 10 times as fast as level 2 charging [@epa-charging]. Depending on the implementation, this standard can charge as fast as 350kW. This is certainly fast enough to fully recharge an electric bus overnight, so seems to be a viable way to solve the charging problem. However, standard plug-in DC fast charging overnight may not be enough on its own due to battery sizes.
+
+EV range is directly a function of battery pack size, and so a larger pack will provide more range. A typical electric bus with a battery pack size of 350kWh and energy consumption of about 3kWh per mile would have around 100 miles of range [@ebus-range]. This may be sufficient for many routes much of the year, but electric heating in the winter months can drastically reduce EV range. Assuming a worst-case scenario of 4-6kWh per mile, this reduces the range of a 350kWh bus to around 70 miles. While some buses are being developed with larger battery packs [@big-ebus], these are currently not commonly in use.
 
 
-# Research Question
+
+
+
 
 # References 
