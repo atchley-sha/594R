@@ -174,31 +174,29 @@ Assuming the re-sampling method refers to a permutation/randomization test, the 
 
 ```{r}
 site <- read_csv("data/CO.site.average.date.2023.csv") %>% 
-	mutate(DATE = as.Date(DATE, format = "%m/%d/%Y"))
+	mutate(DATE = as.Date(DATE, format = "%m/%d/%Y")) %>% 
+	group_by(location) %>% 
+	summarise(mean_loc = mean(mean_CO_g_kg))
 ```
 
-Looking at a plot of the emission rates over time, there doesn't appear to be any meaningful trend:
+Because there were multiple data points at each location, and multiple locations, the data points are not necessarily all random and independent. The measured values at each location are more likely to correlate with each other for any number of potential reasons, including measurement techniques, outside air quality, geographic distribution of vehicle types and sizes, etc. In short, there are many potential variables that a given location would have constant, but could affect the measured emissions. Therefore, each of the daily means are _not_ from the same population, so shouldn't directly be compared between locations.
 
+However, the mean emissions at each _location_ is in fact random and independent, as now the effect these previously-mentioned variables can be captured, that is, the effect on the _location_ means. We therefore take the mean emissions at each location:
 ```{r}
-#| fig.pos = "H",
-#| fig.height = 3
-
-site %>% 
-	ggplot(aes(x = DATE, y = mean_CO_g_kg)) +
-	geom_point() +
-	theme_pander() +
-	labs(
-		x = "Date",
-		y = "Mean CO Emissions (g / kg fuel)"
-	)
+site %>%
+	`names<-`(c("Location", "Mean Emissions")) %>% 
+	kbl(digits = 1, booktabs = TRUE) %>% 
+	kable_styling(latex_options = "HOLD_position")
 ```
-
-Calculating the mean of these values with a 95% confidence interval gives:
+and can now find the mean of _these_ values to estimate the mean emission rate for all of Utah County (with 95% confidence interval):
 
 ```{r}
-MeanCI(site$mean_CO_g_kg) %>% 
+MeanCI(site$mean_loc) %>% 
 	bind_rows() %>% 
 	kbl(digits = 1, booktabs = TRUE) %>% 
 	kable_styling(latex_options = "HOLD_position")
 ```
 
+## 6.1
+
+The random, independent variable is as previously mentioned the mean CO emission rate at each _location_. These values can be assumed to be independent and random, but the _daily_ emission rates cannot, as the rates at each location will be correlated with each other.
