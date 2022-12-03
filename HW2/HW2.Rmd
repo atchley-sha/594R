@@ -48,12 +48,16 @@ The average fuel economy is
 
 ```{r}
 hdvfe <- hdv1 %>% 
-	filter(ITEM == "Average miles traveled per  gallon of fuel consumed") %>% 
-	select(YEAR, `ALL HDV`) %>% 
-	transmute(Year = YEAR, "Fuel economy (mpg)" = `ALL HDV`)
+	filter(str_detect(ITEM, "Fuel consumed") | str_detect(ITEM, "Total Rural and Urban")
+	) %>% 
+	select(YEAR, ITEM, `ALL HDV`) %>% 
+	pivot_wider(names_from = ITEM, values_from = `ALL HDV`) %>% 
+	`names<-`(c("Year", "Mmiles", "KgalFuel")) %>% 
+	transmute(Year,
+						"Fuel Economy (mpg)" = Mmiles*1000000 / (KgalFuel*1000))
 
 hdvfe %>% 
-	kbl(booktabs = TRUE, caption = "Average Fuel Economy of HDVs") %>% 
+	kbl(booktabs = TRUE, caption = "Average Fuel Economy of HDVs", digits = 1) %>% 
 	kable_styling(latex_options = "HOLD_position")
 ```
 
@@ -62,7 +66,7 @@ The CO~2~ emissions per mile is given by $\frac{1}{miles/gal} \times \frac{CO_2}
 
 ```{r}
 hdvem <- hdvfe %>% 
-	mutate("Fuel consumption (gpm)" = 1/`Fuel economy (mpg)`,
+	mutate("Fuel consumption (gpm)" = 1/`Fuel Economy (mpg)`,
 				 "Emissions (g CO$_2$/gal)" = co2gal["diesel"],
 				 "Emissions (g CO$_2$/mile)" =
 				 	`Fuel consumption (gpm)` * `Emissions (g CO$_2$/gal)`)
@@ -311,6 +315,8 @@ regen <- -sum(tp$powerraw[tp$powerraw < 0] *
 
 oldpower <- sum(tp$energy, na.rm = TRUE)
 newpower <- oldpower - (regen/2)
+
+enginepower <- sum(tp$`Engine Power (kW)`)
 ```
 
 Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen) %>% round()` kWh would be available. If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round()` kWh, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
@@ -327,12 +333,14 @@ moveenergy <- sum(enginemove$newengine*enginemove$t/3600, na.rm = TRUE)
 Assuming an auxiliary power load of 7 kW, the engine power used to move the vehicle is $P_{Engine} - 7$ kW, but not less than 0 kW. Finding the total energy expended by the engine attempting to move the vehicle gives `r moveenergy %>% round()` kWh. The total energy actually required to move the vehicle is `r (oldpower) %>% round()` kWh, so the efficiency of the drivetrain is `r (oldpower/moveenergy * 100) %>% round(1)`%.
 
 ## 2.7
-Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F = \frac{`r (oldpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel1 <- oldpower/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (miles <- (totdist * .0006213712)) %>% round(1)` miles, giving an overall fuel economy of `r (miles/fuel1) %>% round(2)` mpg, and a fuel consumption of `r (fuel1/miles*1000) %>% round()` gallons per 1000 miles.
+Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F = \frac{`r (enginepower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel1 <- enginepower/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (miles <- (totdist * .0006213712)) %>% round(1)` miles, giving an overall fuel economy of `r (miles/fuel1) %>% round(2)` mpg, and a fuel consumption of `r (fuel1/miles*1000) %>% round()` gallons per 1000 miles.
 
 ## 2.8
 The energy required in the regenerative-braking scenario (2.5) is `r newpower %>% round()` kWh. The fuel needed is now $F = \frac{`r (newpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel2 <- newpower/energy/eff) %>% round()`\ \text{gal}$, with a fuel economy and consumption of `r (miles/fuel2) %>% round(2)` mpg and `r (fuel2/miles*1000) %>% round()` gallons per 1000 miles. If this drive cycle (`r (miles <- (totdist * .0006213712)) %>% round(1)` miles) is representative of a typical day, then at 5 days per week and 52 weeks per year, the fuel saved is $5 \text{[days/wk]} \times 52 \text{[wk/yr]} \times (`r fuel1 %>% round()` - `r fuel2 %>% round()`) \text{[gal]} = `r (fuelsave <- 5*52*(fuel1-fuel2)) %>% round` \text{[gal/yr]}$ for each truck. Given a current (26 Sept. 2022) diesel price of \$`r (price <- 4.889)`/gal, this amounts to a savings of \$`r (price*fuelsave) %>% round()` per year per truck.
 
+## 2.9
 
+There are multiple possible reasons that hybrid vehicle technology is not more widely used in drayage trucks. Notably, drayage trucks are often old long-haul trucks, so vehicle purchases are not often made with drayage operation in mind. As such, trucks are purchased to be a good fit for long-haul operation, and since long-haul trucks need a large range and are usually at high speeds, hybrid technology becomes less efficient and less practical for this purpose. It also takes a long time to recoup fuel costs, and trucks are usually not owned long enough for that to be a financial incentive.
 
 # 3
 From Annual Energy Outlook 2022 Table 40, we get that the 2021 fuel economies of certain vehicle technologies are as follows:
