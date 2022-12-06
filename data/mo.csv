@@ -1,0 +1,6 @@
+﻿item,cost_km,cost_year,unit
+ebus,0.183,5129.57,euro
+cng,,26133.29,euro
+diesel,0.292,37878.56,euro
+dcfc,,400,$
+oppcharger,,800,$
