@@ -1,7 +1,7 @@
 item,cost,unit
-ebus,359000,euro
-cngbus,175300,euro
-dieselbus,127000,euro
+ebus,430800,$
+cngbus,201360,$
+dieselbus,152400,$
 dcfccharger,20000,$
 oppcharger,40000,$
 bss,562400,$

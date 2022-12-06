@@ -1,6 +1,7 @@
 # Load packages required to define the pipeline:
 library(targets)
 library(tarchetypes) # Load other packages as needed. # nolint
+library(readr)
 
 # Set target options:
 tar_option_set(
@@ -13,15 +14,33 @@ tar_option_set(
 tar_source()
 
 
-# Replace the target list below with your own:
-list(
-  tar_target(
-    name = data,
-    command = tibble(x = rnorm(100), y = rnorm(100))
-#   format = "feather" # efficient storage of large data frames # nolint
-  ),
-  tar_target(
-    name = model,
-    command = coefficients(lm(y ~ x, data = data))
-  )
+data_targets <- tar_plan(
+	tar_target(costsfile, "data/costs.csv", format = "file"),
+	tar_target(fleetfile, "data/fleet.csv", format = "file"),
+	tar_target(fuelfile, "data/fuel.csv", format = "file"),
+	tar_target(lifespanfile, "data/lifespan.csv", format = "file"),
+	tar_target(mofile, "data/mo.csv", format = "file"),
+	
+	costs = read_csv(costsfile),
+	fleet = read_csv(fleetfile),
+	fuel = read_csv(fuelfile),
+	lifespan = read_csv(lifespanfile),
+	mo = read_csv(mofile),
+	
+	utabusmiles = 15842578,
+	
+)
+
+viz_targets <- tar_plan(
+	
+	
+	
+)
+
+
+#### Run all targets ####
+
+tar_plan(
+	data_targets,
+	viz_targets
 )

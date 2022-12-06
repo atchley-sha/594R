@@ -1,4 +1,4 @@
-﻿item,cost,unit
-diesel,0.4326,euro/km
-cng,0.2424,euro/km
-electricity,0.041,euro/km
+item,cost,unit
+diesel,0.8357832,$/mi
+cng,0.4683168,$/mi
+electricity,0.079212,$/mi
