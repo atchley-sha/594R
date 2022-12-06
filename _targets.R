@@ -15,19 +15,21 @@ tar_source()
 
 
 data_targets <- tar_plan(
-	tar_target(costsfile, "data/costs.csv", format = "file"),
-	tar_target(fleetfile, "data/fleet.csv", format = "file"),
-	tar_target(fuelfile, "data/fuel.csv", format = "file"),
-	tar_target(lifespanfile, "data/lifespan.csv", format = "file"),
-	tar_target(mofile, "data/mo.csv", format = "file"),
+	tar_target(costfilebus, "data/bus.csv", format = "file"),
+	costbus = read_csv(costfilebus),
 	
-	costs = read_csv(costsfile),
-	fleet = read_csv(fleetfile),
-	fuel = read_csv(fuelfile),
-	lifespan = read_csv(lifespanfile),
-	mo = read_csv(mofile),
+	tar_target(costfilecharge, "data/charging.csv", format = "file"),
+	costcharging = read_csv(costfilecharge),
 	
 	utabusmiles = 15842578,
+	uvxmiles = 11,
+	uvxfleet = 21,
+	
+)
+
+analysis_targets <- tar_plan(
+	
+	
 	
 )
 
@@ -42,5 +44,6 @@ viz_targets <- tar_plan(
 
 tar_plan(
 	data_targets,
+	analysis_targets,
 	viz_targets
 )

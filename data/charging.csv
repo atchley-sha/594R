@@ -1,0 +1,6 @@
+item,capital,capital_mi,mo_cost_year,kW(h),lifespan
+dcfc,20000,,400,350,10
+opp,40000,,800,450,10
+bss,562400,,,,10
+battery,55125,,,525,3
+induct_lane,,321800,,80,10
