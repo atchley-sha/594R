@@ -24,6 +24,7 @@ data_targets <- tar_plan(
 	utabusmiles = 15842578,
 	uvxmiles = 11,
 	uvxfleet = 21,
+	mi_kwh = 0.478,
 	
 )
 
