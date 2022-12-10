@@ -1,5 +1,6 @@
 ---
-title: "HW 2: Energy Demand and CO2 Emissions"
+title: "HW 2: Energy Demand and CO2 Emissions RESUBMISSION"
+subtitle: "See 1.1, 2.7, 2.9"
 author: "Hayden Atchley"
 date: "`r Sys.Date()`"
 output:
@@ -44,7 +45,7 @@ vmlong <- hdv1 %>%
 ```
 
 ## 1.1
-The average fuel economy is
+Previously, I erroneously added the fuel economies together rather than totaling the distance and the fuel and dividing. The correct average fuel economy is
 
 ```{r}
 hdvfe <- hdv1 %>% 
@@ -231,6 +232,8 @@ tp <- dc %>%
 		powerraw = dpowerraw + apowerraw + rpowerraw + gpowerraw,
 		power = ifelse(powerraw < 0, 0, powerraw),
 		
+		enginepower = `Engine Power (kW)`*t/3600,
+		
 		energy = power*t/3600, #kWh
 		
 		dist = v*t
@@ -316,7 +319,7 @@ regen <- -sum(tp$powerraw[tp$powerraw < 0] *
 oldpower <- sum(tp$energy, na.rm = TRUE)
 newpower <- oldpower - (regen/2)
 
-enginepower <- sum(tp$`Engine Power (kW)`)
+enginepower <- sum(tp$enginepower, na.rm = TRUE)
 ```
 
 Assuming the "negative" tractive power would be used for regenerative braking, an additional `r (regen) %>% round()` kWh would be available. If 50% of that power was recaptured, then the additional tractive power needed would be reduced to `r newpower %>% round()` kWh, a reduction of `r ((oldpower - newpower)/oldpower * 100) %>% round(2)`%.
@@ -333,12 +336,15 @@ moveenergy <- sum(enginemove$newengine*enginemove$t/3600, na.rm = TRUE)
 Assuming an auxiliary power load of 7 kW, the engine power used to move the vehicle is $P_{Engine} - 7$ kW, but not less than 0 kW. Finding the total energy expended by the engine attempting to move the vehicle gives `r moveenergy %>% round()` kWh. The total energy actually required to move the vehicle is `r (oldpower) %>% round()` kWh, so the efficiency of the drivetrain is `r (oldpower/moveenergy * 100) %>% round(1)`%.
 
 ## 2.7
+Previously I used the tractive power rather than the engine power. This has been fixed.
+
 Low-sulfur diesel has an energy content of 128,488 Btu/gal according to the AFDC. This is equivalent to `r (energy <- 37.656)` kWh/gal. Assuming an engine efficiency of `r (eff <- 0.3)`, the total fuel needed for this drive cycle is $F = \frac{`r (enginepower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel1 <- enginepower/energy/eff) %>% round()`\ \text{gal}$. The total distance in this drive cycle is `r (totdist <- sum(tp$dist, na.rm = TRUE)) %>% round()` meters or `r (miles <- (totdist * .0006213712)) %>% round(1)` miles, giving an overall fuel economy of `r (miles/fuel1) %>% round(2)` mpg, and a fuel consumption of `r (fuel1/miles*1000) %>% round()` gallons per 1000 miles.
 
 ## 2.8
 The energy required in the regenerative-braking scenario (2.5) is `r newpower %>% round()` kWh. The fuel needed is now $F = \frac{`r (newpower) %>% round()`[\text{kWh}]/`r eff`}{`r energy %>% round(1)`[\text{kWh/gal}]} = `r (fuel2 <- newpower/energy/eff) %>% round()`\ \text{gal}$, with a fuel economy and consumption of `r (miles/fuel2) %>% round(2)` mpg and `r (fuel2/miles*1000) %>% round()` gallons per 1000 miles. If this drive cycle (`r (miles <- (totdist * .0006213712)) %>% round(1)` miles) is representative of a typical day, then at 5 days per week and 52 weeks per year, the fuel saved is $5 \text{[days/wk]} \times 52 \text{[wk/yr]} \times (`r fuel1 %>% round()` - `r fuel2 %>% round()`) \text{[gal]} = `r (fuelsave <- 5*52*(fuel1-fuel2)) %>% round` \text{[gal/yr]}$ for each truck. Given a current (26 Sept. 2022) diesel price of \$`r (price <- 4.889)`/gal, this amounts to a savings of \$`r (price*fuelsave) %>% round()` per year per truck.
 
 ## 2.9
+Previously I had not written a response to this question.
 
 There are multiple possible reasons that hybrid vehicle technology is not more widely used in drayage trucks. Notably, drayage trucks are often old long-haul trucks, so vehicle purchases are not often made with drayage operation in mind. As such, trucks are purchased to be a good fit for long-haul operation, and since long-haul trucks need a large range and are usually at high speeds, hybrid technology becomes less efficient and less practical for this purpose. It also takes a long time to recoup fuel costs, and trucks are usually not owned long enough for that to be a financial incentive.
 
