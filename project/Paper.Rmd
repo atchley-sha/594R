@@ -1,5 +1,6 @@
 ---
-title: Electrification of Bus Networks in Provo, Utah (DRAFT)
+title: "Electrifying a Bus Network"
+subtitle: "A UVX Case Study"
 author: Hayden Atchley
 date: "22 November 2022"
 documentclass: article
