@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
 
 library(tidyverse)
 library(ggthemes)
+library(kableExtra)
 ```
 
 ```{r}
@@ -102,27 +103,72 @@ Wireless inductive charging has the potential to obviate the need for "charging 
 
 Based on these considerations....
 
-The UVX is a bus rapid transit service operated by UTA and running through Provo and Orem, Utah. The service uses New Flyer XDE 60 model vehicles, so to make as close of a comparison as possible, I used the New Flyer XE 60 as the electric bus model for my calculations. This model is nearly identical to the XDE 60, with the main difference being that the XE is BE powered and the XDE is diesel-electric <><><>. Table XXX lists information about the current UVX route, and Table XXX lists details of the XE 60. Note that the current UVX fleet size is estimated based on vehicle tracking services, and several numbers are estimated from scheduling information.
+The UVX is a bus rapid transit service operated by UTA and running through Provo and Orem, Utah. The service uses New Flyer XDE 60 model vehicles, so to make as close of a comparison as possible, I used the New Flyer XE 60 as the electric bus model for my calculations. This model is nearly identical to the XDE 60, with the main difference being that the XE is BE powered and the XDE is diesel-electric <><><>. Table \@ref(tab:uvx) lists information about the current UVX route, and Table \@ref(tab:xe) lists details of the XE 60. Note that the current UVX fleet size is estimated based on vehicle tracking services, and several numbers are estimated from scheduling information.
 
-TABLE
+```{r}
+#| uvx
+
+uvx <- read_csv("data/uvx.csv", col_names = FALSE)
+
+uvx %>% 
+	kbl(
+		align = 'lrl',
+		col.names = c("Utah Valley Express (830X)", "", ""),
+		booktabs = TRUE,
+		caption = "UVX Route Information") %>% 
+	kable_styling(latex_options = "hold_position")
+```
+
+```{r}
+#| xe
+
+xe <- read_csv("data/xe60.csv", col_names = FALSE)
+
+xe %>% 
+	kbl(
+		align = 'lrl',
+		col.names = c("New Flyer XE 60", "", ""),
+		booktabs = TRUE,
+		caption = "New Flyer XE 60 Information") %>% 
+	kable_styling(latex_options = "hold_position")
+```
 
 Based on these values, each BE bus would need about an hour of overhead charging at 450kW per day or about 1.3 hours of 350kW plug-in charging per day. With only overnight (off-service) charging, a plug-in charger for every two vehicles or an overhead charger for every three vehicles would be needed. However, overhead charging is much easier to use during service hours. Traversing 11 miles at 3.4 kWh/mi requires 38 kWh, which at 450 kW would take 5.1 minutes of charging. If each vehicle spent this amount of time charging at each end of the route, then no off-service charging would be needed. Though this could theoretically be accomplished with only one charger at each end of the route, ... I am assuming there are two (four total). I am assuming as well that plug-in charging would be used mainly overnight, so 11 chargers would be required.
 
 In order to use inductive lane charging, the charge rate would need to provide 11 miles of range for every 42 minutes of charging. This is about 16 miles of range per hour, which at an efficiency of 3.4 kWh/mi requires a 55 kW effective charge rate. Assuming a relatively constant travel speed, 80 kW lane charging would need to be installed on 68% of the UVX route, or 15.1 miles, to achieve this overall rate.
 
-A cost comparison of these charging solutions is given in Table XXX. Many of these values are estimated based on available information. It is worth noting that these costs can significantly vary depending on the specific implementation, but the numbers presented represent a rough average cost. Note also that the expected life span of this equipment (including the vehicles) is about 10\textendash 14 years.
+A cost comparison of these charging solutions is given in Table \@ref(tab:costs). Many of these values are estimated based on available information. It is worth noting that these costs can significantly vary depending on the specific implementation, but the numbers presented represent a rough average cost. Note also that the expected life span of this equipment (including the vehicles) is about 10\textendash 14 years.
 
-TABLE (MO ebus and reg bus)
+```{r}
+#| costs
+
+tribble(
+	~item, ~cap, ~mo,
+	"XE 60 Bus", 750000, 7000,
+	"XDE 60 Bus", 1000000, 50000,
+	"Plug-in Charger", 20000, 400,
+	"Overhead Charger", 40000, 800,
+	"Inductive Lanes (per mile)", 322000, 6400
+) %>% 
+	kbl(
+		col.names = c("", "Capital Cost (USD)", "Maintenance Cost (USD/yr)"),
+		caption = "Fleet Costs",
+		booktabs = TRUE
+	) %>% 
+	kable_styling(latex_options = "hold_position")
+```
 
 In addition to these costs, I am estimating the fuel cost at $0.60/mi for diesel-electric vehicles and $0.10/mi for BE vehicles <><><>. Based on these costs, I analyzed several BE bus adoption strategies. The first is a baseline, with the existing fleet and no migration to BE buses. I also analyzed both a 100% and 50% strategy, in which BE buses instantly replace 100% and 50% of the current fleet respectively. Finally I analyzed a "Gradual" strategy, in which UTA replaces 2 vehicles in the current fleet with BE buses annually. Each of these strategies were analyzed with overhead charging, plug-in charging, and inductive lane charging.
 
 # Results
 
-An interesting result I immediately found is that given the specific scenario specifications, plug-in charging and overhead charging had nearly identical costs. Because of this, I averaged the cost of the two options and created a "Site Charging" scenario, as opposed to the "Inductive Lanes" scenario. Figures \@ref(fig:site-fig) and \@ref(fig:lanes-fig) show the cumulative cost over time of each BE bus adoption strategy. The shaded area represents the typical lifespan of the buses and charging equipment (10\textendash 14 years), so after this time the costs increase due to the need for equipment replacement. While in reality equipment would be replaced gradually rather than all at once, the cumulative effect on cost would be similar enough to not significantly affect the conclusions of this analysis.
+An interesting result I immediately found is that given the specific scenario specifications, plug-in charging and overhead charging had nearly identical costs. Because of this, I averaged the cost of the two options and created a "Site Charging" scenario, as opposed to the "Inductive Lanes" scenario. Figures \@ref(fig:site) and \@ref(fig:lanes) show the cumulative cost over time of each BE bus adoption strategy. The shaded area represents the typical lifespan of the buses and charging equipment (10\textendash 14 years), so after this time the costs increase due to the need for equipment replacement. While in reality equipment would be replaced gradually rather than all at once, the cumulative effect on cost would be similar enough to not significantly affect the conclusions of this analysis.
 
 ```{r}
-#| lanes-fig
-#| fig.cap = "Cumulative cost based on site charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time."
+#| site,
+#| fig.height = 4,
+#| fig.cap = "Cumulative cost based on site charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time.",
+#| fig.pos = "h"
 
 scenarios %>% 
 	filter(Scenario != "Lanes") %>% 
@@ -139,8 +185,10 @@ scenarios %>%
 ```
 
 ```{r}
-#| lanes-fig
-#| fig.cap = "Cumulative cost based on inductive lane charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time."
+#| lanes,
+#| fig.height = 4,
+#| fig.cap = "Cumulative cost based on inductive lane charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time.",
+#| fig.pos = "h"
 
 scenarios %>% 
 	filter(Scenario != "Chargers") %>% 
@@ -156,13 +204,9 @@ scenarios %>%
 			 title = "Inductive Lanes")
 ```
 
-Firstly, as inductive lanes are significantly more expensive than site chargers, it takes a longer time for any BE adoption strategy to save money compared to the baseline. In fact, no strategy is cheaper than the baseline before the estimated life span of the vehicles in the inductive lanes scenario. Though even the current diesel-electric buses would need to be replaced at that time, so ultimately the inductive lanes provide a reasonable solution after XXX years. The "Site Charging" scenario pays itself off much more quickly, especially in the 100% replacement strategy.
+Firstly, as inductive lanes are significantly more expensive than site chargers, it takes a longer time for any BE adoption strategy to save money compared to the baseline. In fact, no strategy is cheaper than the baseline before the estimated life span of the vehicles in the inductive lanes scenario. Though even the current diesel-electric buses would need to be replaced at that time, so ultimately the inductive lanes provide a reasonable solution after 15\textendash 20 years. The "Site Charging" scenario pays itself off much more quickly (11\textendash 13 years), especially in the 100% replacement strategy.
 
-It is important to note that UTA already has a fleet of diesel-electric buses, so capital costs are only incurred for new BE buses and charging infrastructure. This is why the "Gradual" strategy increases in cost so quickly; new buses are being purchased each year, but a large portion of the fleet still has a high fuel cost per mile until most of the vehicles are replaced. Incidentally, after 11 years, when all vehicles have been replaced in the "Gradual" strategy, the difference between the "Gradual" and "100%" strategies is purely the difference in fuel costs, which is quite substantial.
-
-- overhead/plugin about the same
-- site charging > lanes (for UVX)
-- economically viable
+It is important to note that UTA already has a fleet of diesel-electric buses, so capital costs are only incurred for new BE buses and charging infrastructure. This is why the "Gradual" strategy increases in cost so quickly; new buses are being purchased each year, but a large portion of the fleet still has a high fuel cost per mile and maintenance cost until most of the vehicles are replaced.
 
 # Limitations and Conclusions
 
@@ -174,5 +218,9 @@ However, several significant limitations apply to this research.
 -only UVX
 
 Conclude that even with these limitations, transit agencies should look at BE buses. Also emissions.
+- site charging > lanes (for UVX)
+- economically viable
+
+\newpage
 
 # References 
