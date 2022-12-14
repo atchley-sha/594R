@@ -71,39 +71,31 @@ scenarios <- fullcosts %>%
 
 # Introduction
 
-Recently, electric vehicles (EVs) have gained significant public awareness and various levels of support. Generally the adoption of EVs is seen as a good thing, as there are many clear benefits over internal combustion engine (ICE) vehicles. Perhaps the most obvious is that EVs have no emissions, since they are driven entirely by electric motors. Another important advantage is efficiency: while an ICE vehicle will convert around 20% of the fuel's stored energy into motion [@gas-efficiency], EVs are around 90% efficient [@ev-efficiency]. Electric motors are also efficient over a large range of rotational speeds, whereas ICEs are only efficient at a much narrower range of speeds. Because of these reasons, several transit agencies have deployed battery-electric (BE) buses in their fleets <><><>.
+Recently, electric vehicles (EVs) have gained significant public awareness and various levels of support. Generally the adoption of EVs is seen as a good thing, as there are many clear benefits over internal combustion engine (ICE) vehicles. Perhaps the most obvious is that EVs have no emissions, since they are driven entirely by electric motors. Another important advantage is efficiency: while an ICE vehicle will convert around 20% of the fuel's stored energy into motion [@gas-efficiency], EVs are around 90% efficient [@ev-efficiency]. Electric motors are also efficient over a large range of rotational speeds, whereas ICEs are only efficient at a much narrower range of speeds. Because of these reasons, several transit agencies have deployed battery-electric (BE) buses in their fleets [@Li2016; @Topal2018; @Zhang2022].
 
 However, EVs are not always universally superior to ICE vehicles. One major consideration is that the range of EVs is lower than may be practical in certain applications. Though EVs are more efficient at converting stored energy into motion, gasoline and diesel are more energy-dense than batteries, and so that energy becomes harder to store in an EV by comparison. What truly makes this a concern is the time required to recharge an EV's battery compared to the time to refuel an ICE vehicle's tank. Though there are relatively fast charging standards available, as of now none of them are nearly as fast as refueling at a gas pump [@epa-charging], especially for a vehicle as large as a bus.
 
-Another major consideration is the source of electricity used to power EVs. While EVs themselves have no emissions, electricity generation often does. In fact, in areas such as Utah where coal is the major source of electricity <><><>, the per-mile emissions of EVs (accounting for electricity generation) can be higher than of hybrid vehicles <><><>. However, especially with recent legislation such as the Infrastructure Investment and Jobs Act <><> and the Inflation Reduction Act <><>, electricity generation is on the path to becoming greener overall.
+Another major consideration is the source of electricity used to power EVs. While EVs themselves have no emissions, electricity generation often does. In fact, in areas such as Utah where coal is the major source of electricity, the per-mile emissions of EVs (accounting for electricity generation) can be higher than of hybrid vehicles. However, especially with recent legislation such as the @iija and the @ira, electricity generation is on the path to becoming greener overall.
 
 This paper, therefore, is not focused on comparing vehicles based on emissions. Rather, the focus is to provide a list of considerations that a transit agency should take into account when migrating to a BE bus fleet. Additionally, this paper presents an application of these considerations to Utah Transit Authority's (UTA's) Utah Valley Express (UVX) bus line as a case study.
 
 # Background
 
-Any transit agency operating a bus network will need to take into account several considerations.
--fuel cost
--fleet size
--routing
--fleet rotation?
-(addt'l for ev buses)
--charging
+Any transit agency operating a bus network will need to take into account several considerations. These include fleet size, routing, fuel costs, and potentially a rotation of vehicles for maintenance. These considerations apply regardless of the type of vehicle used, but BE buses bring additional concerns for vehicle range and charging capacity.
 
-Both electric and fuel-powered vehicles have limited range, but it is generally much faster to add fuel than to recharge a battery. Because of this, charging considerations become paramount in any deployment of BE buses. There are currently several options available for EV charging. Level 1 and 2 charging as well as DC fast charging use a plug-in connector to transfer power [@epa-charging], and other options such as wireless inductive charging exist and are being developed upon [@Klontz1993; @Panchal2018]. Perhaps somewhat unique to buses are overhead chargers, where a rail on the bus extends to make contact with an overhead power supply at a bus stop (or vice versa, as in the OppCharge standard <><><>). 
+Both electric and fuel-powered vehicles have limited range, but it is generally much faster to add fuel than to recharge a battery. Because of this, charging considerations become paramount in any deployment of BE buses. There are currently several options available for EV charging. Level 1 and 2 charging as well as DC fast charging use a plug-in connector to transfer power [@epa-charging], and other options such as wireless inductive charging exist and are being developed upon [@Klontz1993; @Panchal2018]. Perhaps somewhat unique to buses are overhead chargers, where a rail on the bus extends to make contact with an overhead power supply at a bus stop (or vice versa, as in the OppCharge standard [@oppcharge]). 
 
 While the level 1 and level 2 EV charging standards work well for personal vehicles, which sit idle for large parts of the day, these are relatively slow standards. A personal vehicle can expect about 25 miles of range per hour of level 2 charging [@epa-charging]. A bus, which weighs several times that of a personal vehicle [@car-weights], would get a fraction of that range. Many bus routes run for most of the day, and even with an 8-hour daily level 2 charge a bus may only gain about 50 miles of daily range. A city bus running for 12 hours per day with an average speed of 12mph would need more than double that. Exclusively using level 2 charging would in many cases necessitate at least a doubling of fleet size to maintain those routes, which is impractical.
 
 DC fast charging, on the other hand, can charge vehicles on the order of 10 times as fast as level 2 charging [@epa-charging]. Depending on the implementation, this standard can charge as fast as 350kW. This is certainly fast enough to fully recharge an electric bus overnight, so seems to be a viable way to solve the charging problem. However, standard plug-in DC fast charging overnight may not be enough on its own due to battery sizes. EV range is directly a function of battery pack size, and so a larger pack will provide more range. A typical electric bus with a battery pack size of 350kWh and energy consumption of about 3kWh per mile would have around 100 miles of range [@ebus-range]. This may be sufficient for many routes, but depending on the fleet size it may not be viable to install enough charging stations to fully recharge every vehicle every day.
 
-Overhead charging allows chargers to be installed almost anywhere, so buses would potentially be able to charge mid-route. While this could also be accomplished with plug-in charging, the additional burden on the driver in exiting the vehicle to access the charger adds delay. By contrast, the OppCharge overhead charging standard is automatic and charges at up to 450kW <><><>, so 6 minutes of charging can add 10\textendash 20 miles of range to a 3kWh per mile bus. For a local bus route, this could enable short charging sessions at each end of the route during the day, reducing the need for overnight charging.
+Overhead charging allows chargers to be installed almost anywhere, so buses would potentially be able to charge mid-route. While this could also be accomplished with plug-in charging, the additional burden on the driver in exiting the vehicle to access the charger adds delay. By contrast, the OppCharge overhead charging standard is automatic and charges at up to 450kW [@oppcharge], so 6 minutes of charging can add 10\textendash 20 miles of range to a 3kWh per mile bus. For a local bus route, this could enable short charging sessions at each end of the route during the day, reducing the need for overnight charging.
 
-Wireless inductive charging has the potential to obviate the need for "charging breaks" entirely. This technology involves installing.... Inductive charging tends to be much slower than the other options at around 80kW <><><>, but the ability to charge while in operation can mitigate this concern.
+Wireless inductive charging has the potential to obviate the need for "charging breaks" entirely. This technology involves installing charging infrastructure in the road itself, to wirelessly charge vehicles that drive over it. Inductive charging tends to be much slower than the other options at around 80kW [@Chen2018], but the ability to charge while in operation, as opposed to stationary charging, can mitigate this concern.
 
 # Methods
 
-Based on these considerations....
-
-The UVX is a bus rapid transit service operated by UTA and running through Provo and Orem, Utah. The service uses New Flyer XDE 60 model vehicles, so to make as close of a comparison as possible, I used the New Flyer XE 60 as the electric bus model for my calculations. This model is nearly identical to the XDE 60, with the main difference being that the XE is BE powered and the XDE is diesel-electric <><><>. Table \@ref(tab:uvx) lists information about the current UVX route, and Table \@ref(tab:xe) lists details of the XE 60. Note that the current UVX fleet size is estimated based on vehicle tracking services, and several numbers are estimated from scheduling information.
+In order to assess the viability of these charging solutions, I am applying these considerations to UTA's UVX bus route. The UVX is a bus rapid transit (BRT) service running through Provo and Orem, Utah. The service uses New Flyer XDE 60 model vehicles, so to make as close of a comparison as possible, I used the New Flyer XE 60 as the electric bus model for my calculations. This model is nearly identical to the XDE 60, with the main difference being that the XE is BE powered and the XDE is diesel-electric [@newflyer]. Table \@ref(tab:uvx) lists information about the current UVX route, and Table \@ref(tab:xe) lists details of the XE 60 [@newflyerxe]. Note that the current UVX fleet size is estimated based on vehicle tracking services, and several numbers are estimated from scheduling information.
 
 ```{r}
 #| uvx
@@ -111,11 +103,13 @@ The UVX is a bus rapid transit service operated by UTA and running through Provo
 uvx <- read_csv("data/uvx.csv", col_names = FALSE)
 
 uvx %>% 
+	mutate(across(.fns = as.character)) %>% 
 	kbl(
 		align = 'lrl',
 		col.names = c("Utah Valley Express (830X)", "", ""),
 		booktabs = TRUE,
-		caption = "UVX Route Information") %>% 
+		caption = "UVX Route Information",
+		linesep = "") %>% 
 	kable_styling(latex_options = "hold_position")
 ```
 
@@ -125,6 +119,7 @@ uvx %>%
 xe <- read_csv("data/xe60.csv", col_names = FALSE)
 
 xe %>% 
+	mutate(across(.fns = as.character)) %>% 
 	kbl(
 		align = 'lrl',
 		col.names = c("New Flyer XE 60", "", ""),
@@ -133,11 +128,11 @@ xe %>%
 	kable_styling(latex_options = "hold_position")
 ```
 
-Based on these values, each BE bus would need about an hour of overhead charging at 450kW per day or about 1.3 hours of 350kW plug-in charging per day. With only overnight (off-service) charging, a plug-in charger for every two vehicles or an overhead charger for every three vehicles would be needed. However, overhead charging is much easier to use during service hours. Traversing 11 miles at 3.4 kWh/mi requires 38 kWh, which at 450 kW would take 5.1 minutes of charging. If each vehicle spent this amount of time charging at each end of the route, then no off-service charging would be needed. Though this could theoretically be accomplished with only one charger at each end of the route, ... I am assuming there are two (four total). I am assuming as well that plug-in charging would be used mainly overnight, so 11 chargers would be required.
+Based on these values, each BE bus would need about an hour of overhead charging at 450kW per day or about 1.3 hours of 350kW plug-in charging per day. With only overnight (off-service) charging, a plug-in charger for every two vehicles or an overhead charger for every three vehicles would be needed. However, overhead charging is much easier to use during service hours. Traversing 11 miles at 3.4 kWh/mi requires 38 kWh, which at 450 kW would take 5.1 minutes of charging. If each vehicle spent this amount of time charging at each end of the route, then no off-service charging would be needed. Though this could theoretically be accomplished with only one charger at each end of the route, it would be more efficient (and probably more likely) for this to be doubled with two chargers at each end, when multiple buses are waiting to charge. This would also for redundancy in case of a charger malfunction. Plug-in charging, however, is more likely to be used mainly outside service hours, so the full fleet would need to be charged each night. This would require 11 chargers for 21 vehicles.
 
 In order to use inductive lane charging, the charge rate would need to provide 11 miles of range for every 42 minutes of charging. This is about 16 miles of range per hour, which at an efficiency of 3.4 kWh/mi requires a 55 kW effective charge rate. Assuming a relatively constant travel speed, 80 kW lane charging would need to be installed on 68% of the UVX route, or 15.1 miles, to achieve this overall rate.
 
-A cost comparison of these charging solutions is given in Table \@ref(tab:costs). Many of these values are estimated based on available information. It is worth noting that these costs can significantly vary depending on the specific implementation, but the numbers presented represent a rough average cost. Note also that the expected life span of this equipment (including the vehicles) is about 10\textendash 14 years.
+A cost comparison of these charging solutions is given in Table \@ref(tab:costs). Many of these values are estimated based on available information [@Topal2018; @DiNello2021; @Wortrich2022]. It is worth noting that these costs can significantly vary depending on the specific implementation, but the numbers presented represent a rough average cost. Note also that the expected life span of this equipment (including the vehicles) is about 10\textendash 14 years.
 
 ```{r}
 #| costs
@@ -153,12 +148,13 @@ tribble(
 	kbl(
 		col.names = c("", "Capital Cost (USD)", "Maintenance Cost (USD/yr)"),
 		caption = "Fleet Costs",
-		booktabs = TRUE
+		booktabs = TRUE,
+		align = 'lcc'
 	) %>% 
 	kable_styling(latex_options = "hold_position")
 ```
 
-In addition to these costs, I am estimating the fuel cost at $0.60/mi for diesel-electric vehicles and $0.10/mi for BE vehicles <><><>. Based on these costs, I analyzed several BE bus adoption strategies. The first is a baseline, with the existing fleet and no migration to BE buses. I also analyzed both a 100% and 50% strategy, in which BE buses instantly replace 100% and 50% of the current fleet respectively. Finally I analyzed a "Gradual" strategy, in which UTA replaces 2 vehicles in the current fleet with BE buses annually. Each of these strategies were analyzed with overhead charging, plug-in charging, and inductive lane charging.
+In addition to these costs, I am estimating the fuel cost at \$0.60/mi for diesel-electric vehicles and \$0.10/mi for BE vehicles [@Topal2018]. Based on these costs, I analyzed several BE bus adoption strategies. The first is a baseline, with the existing fleet and no migration to BE buses. I also analyzed both a 100% and 50% strategy, in which BE buses instantly replace 100% and 50% of the current fleet respectively. Finally I analyzed a "Gradual" strategy, in which UTA replaces 2 vehicles in the current fleet with BE buses annually. Each of these strategies were analyzed with overhead charging, plug-in charging, and inductive lane charging.
 
 # Results
 
@@ -166,9 +162,9 @@ An interesting result I immediately found is that given the specific scenario sp
 
 ```{r}
 #| site,
-#| fig.height = 4,
+#| fig.height = 3.5,
 #| fig.cap = "Cumulative cost based on site charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time.",
-#| fig.pos = "h"
+#| fig.pos = "H"
 
 scenarios %>% 
 	filter(Scenario != "Lanes") %>% 
@@ -186,9 +182,9 @@ scenarios %>%
 
 ```{r}
 #| lanes,
-#| fig.height = 4,
+#| fig.height = 3.5,
 #| fig.cap = "Cumulative cost based on inductive lane charging. The shaded area indicates the typical lifespan of equipment and vehicles, so replacement costs are added at this time.",
-#| fig.pos = "h"
+#| fig.pos = "H"
 
 scenarios %>% 
 	filter(Scenario != "Chargers") %>% 
@@ -204,22 +200,15 @@ scenarios %>%
 			 title = "Inductive Lanes")
 ```
 
-Firstly, as inductive lanes are significantly more expensive than site chargers, it takes a longer time for any BE adoption strategy to save money compared to the baseline. In fact, no strategy is cheaper than the baseline before the estimated life span of the vehicles in the inductive lanes scenario. Though even the current diesel-electric buses would need to be replaced at that time, so ultimately the inductive lanes provide a reasonable solution after 15\textendash 20 years. The "Site Charging" scenario pays itself off much more quickly (11\textendash 13 years), especially in the 100% replacement strategy.
+Firstly, as inductive lanes are significantly more expensive than site chargers, it takes a longer time for any BE adoption strategy to save money compared to the baseline. In fact, no strategy is cheaper than the baseline before the estimated life span of the vehicles in the inductive lanes scenario. Though even the current diesel-electric buses would need to be replaced at that time, so ultimately the inductive lanes provide a reasonable solution after 15\textendash 20 years. The "Site Charging" scenario pays itself off much more quickly, especially in the 100% replacement strategy (11\textendash 13 years).
 
 It is important to note that UTA already has a fleet of diesel-electric buses, so capital costs are only incurred for new BE buses and charging infrastructure. This is why the "Gradual" strategy increases in cost so quickly; new buses are being purchased each year, but a large portion of the fleet still has a high fuel cost per mile and maintenance cost until most of the vehicles are replaced.
 
 # Limitations and Conclusions
 
-This analysis shows that the adoption of BE buses is economically viable, even when non-EV buses are already in service. (evidenced as well by agencies adopting ev buses, UTA as well)
+This analysis shows that the adoption of BE buses is economically viable, even when non-EV buses are already in service. Certainly as current vehicles reach the end of their life there is a very strong case to replace them with BE buses, as fuel and maintenance costs are lower, even accounting for the charging infrastructure. However, several significant limitations apply to this research. The costs used in the analysis are at best rough approximations of actual real-world costs, so any agency looking to adopt BE buses should conduct a more thorough cost analysis than the one presented here. Additionally, this analysis looked specifically at the UVX service, which is not necessarily representative of local bus routes, or even other BRT services.
 
-However, several significant limitations apply to this research.
--variable costs
--estimates
--only UVX
-
-Conclude that even with these limitations, transit agencies should look at BE buses. Also emissions.
-- site charging > lanes (for UVX)
-- economically viable
+Even with these limitations, though, BE buses present a compelling solution for transit agencies. This is evidenced by their growing adoption [@Li2016; @Topal2018; @Zhang2022], including in UTA's own fleet [@uta2021review]. In adopting BE fleets and building charging infrastructure, this paper generally recommends site charging solutions (plug-in and/or overhead) to inductive lane charging based on cost, but again, a more thorough analysis should be performed in each specific circumstance.
 
 \newpage
 
